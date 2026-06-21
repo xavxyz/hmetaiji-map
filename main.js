@@ -37,25 +37,25 @@ async function loadLocations() {
   const res = await fetch(SHEET_URL);
   if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
   const csv = await res.text();
-  const rows = parseCSV(csv);
-  return Promise.all(rows.map(geocodeLocation));
+  return parseCSV(csv);
 }
 
 function parseCSV(csv) {
   const [, ...rows] = csv.trim().split("\n"); // ignore la ligne de headers
   return rows
     .map((row) => {
-      const [city, activity, description, infos1, infos2, infos3, link] =
+      const [city, lat, lng, activity, description, infos1, infos2, infos3, link] =
         parseRow(row);
       return {
         city,
+        coordinates: [parseFloat(lng), parseFloat(lat)],
         activity,
         description,
         infos: [infos1, infos2, infos3].filter(Boolean),
         link,
       };
     })
-    .filter((loc) => loc.city);
+    .filter((loc) => loc.city && !isNaN(parseFloat(lat)));
 }
 
 function parseRow(row) {
@@ -76,18 +76,6 @@ function parseRow(row) {
   }
   result.push(field.trim());
   return result;
-}
-
-// TODO: si la sheet grandit, ajouter des colonnes lat/lng pour éviter N requêtes de géocodage au chargement
-async function geocodeLocation(location) {
-  const query = encodeURIComponent(location.city);
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${mapboxgl.accessToken}&country=fr&limit=1&language=fr`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.features?.length) {
-    throw new Error(`Ville introuvable : ${location.city}`);
-  }
-  return { ...location, coordinates: data.features[0].center };
 }
 
 // ─── MARKERS ──────────────────────────────────────────────────────────────────
