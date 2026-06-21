@@ -23,8 +23,11 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/xavxyz/cmq9jsdv8002a01qp4ml05ho4",
-  center: [2.2, 46.5],
-  zoom: 5.2,
+  bounds: [
+    [-5.5, 41.0], // SW — Pays Basque / Pyrénées
+    [9.7, 51.5],  // NE — Ardennes / Alsace (Corse incluse)
+  ],
+  fitBoundsOptions: { padding: 40 },
 });
 
 map.on("load", async () => {
