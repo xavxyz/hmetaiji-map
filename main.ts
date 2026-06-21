@@ -1,6 +1,20 @@
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+// ─── TYPES ────────────────────────────────────────────────────────────────────
+
+interface Location {
+  city: string;
+  coordinates: [number, number];
+  activity: string;
+  description: string;
+  infos: string[];
+  link: string;
+}
 
 // ─── MAP ──────────────────────────────────────────────────────────────────────
 
@@ -33,41 +47,42 @@ map.on("load", async () => {
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
-async function loadLocations() {
+async function loadLocations(): Promise<Location[]> {
   const res = await fetch(SHEET_URL);
   if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
   const csv = await res.text();
   return parseCSV(csv);
 }
 
-function parseCSV(csv) {
-  const [, ...rows] = csv.trim().split("\n"); // ignore la ligne de headers
-  return rows.map((row) => {
-    const [
-      city,
-      lng,
-      lat,
-      activity,
-      description,
-      infos1,
-      infos2,
-      infos3,
-      link,
-    ] = parseRow(row);
-
-    return {
-      city,
-      coordinates: [parseFloat(lng), parseFloat(lat)],
-      activity,
-      description,
-      infos: [infos1, infos2, infos3].filter(Boolean),
-      link,
-    };
-  });
+function parseCSV(csv: string): Location[] {
+  const [, ...rows] = csv.trim().split("\n");
+  return rows
+    .map((row) => {
+      const [
+        city,
+        lng,
+        lat,
+        activity,
+        description,
+        infos1,
+        infos2,
+        infos3,
+        link,
+      ] = parseRow(row);
+      return {
+        city,
+        coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
+        activity,
+        description,
+        infos: [infos1, infos2, infos3].filter(Boolean),
+        link,
+      };
+    })
+    .filter((loc) => loc.city !== "" && !isNaN(loc.coordinates[0]));
 }
 
-function parseRow(row) {
-  const result = [];
+function parseRow(row: string): string[] {
+  const result: string[] = [];
   let field = "";
   let inQuotes = false;
   for (let i = 0; i < row.length; i++) {
@@ -90,15 +105,17 @@ function parseRow(row) {
 
 // ─── MARKERS ──────────────────────────────────────────────────────────────────
 
-const markerTemplate = document.querySelector(".placeholder .marker");
+const markerTemplate = document.querySelector<HTMLElement>(
+  ".placeholder .marker",
+)!;
 
-function createMarkerEl() {
-  const el = markerTemplate.cloneNode(true);
+function createMarkerEl(): HTMLElement {
+  const el = markerTemplate.cloneNode(true) as HTMLElement;
   el.classList.remove("big");
   return el;
 }
 
-function addMarkers(locations) {
+function addMarkers(locations: Location[]): void {
   locations.forEach((location) => {
     const el = createMarkerEl();
     el.addEventListener("click", () => {
@@ -111,7 +128,7 @@ function addMarkers(locations) {
 
 // ─── LOADER ───────────────────────────────────────────────────────────────────
 
-function showLoader() {
+function showLoader(): void {
   map.dragPan.disable();
   map.keyboard.disable();
   map.doubleClickZoom.disable();
@@ -119,13 +136,13 @@ function showLoader() {
 
   const overlay = document.createElement("div");
   overlay.id = "map-loader";
-  const markerEl = markerTemplate.cloneNode(true);
+  const markerEl = markerTemplate.cloneNode(true) as HTMLElement;
   markerEl.classList.add("loading");
   overlay.appendChild(markerEl);
-  document.getElementById("map").appendChild(overlay);
+  document.getElementById("map")!.appendChild(overlay);
 }
 
-function hideLoader() {
+function hideLoader(): void {
   document.getElementById("map-loader")?.remove();
   map.dragPan.enable();
   map.keyboard.enable();
@@ -135,26 +152,26 @@ function hideLoader() {
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 
-const placeholder = document.getElementById("placeholder");
-const card = document.getElementById("location-card");
+const placeholder = document.getElementById("placeholder")!;
+const card = document.getElementById("location-card")!;
 
 const fields = {
-  title: document.getElementById("title"),
-  activity: document.getElementById("activity"),
-  description: document.getElementById("description"),
-  infos: document.getElementById("infos"),
-  link: document.getElementById("link"),
+  title: document.getElementById("title")!,
+  activity: document.getElementById("activity")!,
+  description: document.getElementById("description")!,
+  infos: document.getElementById("infos")!,
+  link: document.getElementById("link") as HTMLAnchorElement,
 };
 
-let activeMarker = null;
+let activeMarker: HTMLElement | null = null;
 
-function setActiveMarker(el) {
+function setActiveMarker(el: HTMLElement | null): void {
   activeMarker?.classList.remove("active");
   el?.classList.add("active");
   activeMarker = el;
 }
 
-function showCard(location) {
+function showCard(location: Location): void {
   fields.title.textContent = location.city;
   fields.activity.textContent = location.activity;
   fields.description.textContent = location.description;
@@ -170,10 +187,10 @@ function showCard(location) {
   card.classList.remove("hidden");
 }
 
-function hideCard() {
+function hideCard(): void {
   card.classList.add("hidden");
   placeholder.classList.remove("hidden");
   setActiveMarker(null);
 }
 
-document.getElementById("close-btn").addEventListener("click", hideCard);
+document.getElementById("close-btn")!.addEventListener("click", hideCard);
