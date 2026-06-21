@@ -1,28 +1,6 @@
-// ─── DATA ─────────────────────────────────────────────────────────────────────
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
 
-const LOCATIONS = [
-  {
-    id: 1,
-    city: "Avignon",
-    coordinates: [4.8055, 43.9493],
-    address: "5 Rue Louis Pasteur, 84000 Avignon",
-    activity: "Cycle Journées",
-    description:
-      "Cycle de journées de Taijiquan : Ji Ben Gong, Zhan Zhuang, Song Gong, Forme.",
-    infos: "10h à 12h30 - 14h à 16h30. Parking gratuit.",
-    link: "/avignon",
-  },
-  {
-    id: 2,
-    city: "Lyon",
-    coordinates: [4.8357, 45.764],
-    address: "Lyon",
-    activity: "Cours hebdomadaires",
-    description: "Cours réguliers de Taijiquan tous les lundi.",
-    infos: "20h - 21h30",
-    link: "/lyon",
-  },
-];
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 // ─── MAP ──────────────────────────────────────────────────────────────────────
 
@@ -35,17 +13,85 @@ const map = new mapboxgl.Map({
   zoom: 5.2,
 });
 
-map.on("load", () => {
+map.on("load", async () => {
   map.addSource("mapbox-terrain", {
     type: "vector",
     url: "mapbox://xavxyz.9vcx1li9ymy3",
   });
   map.scrollZoom.disable();
+
+  showLoader();
+  try {
+    const locations = await loadLocations();
+    addMarkers(locations);
+  } catch (err) {
+    console.error("Erreur lors du chargement des données :", err);
+  } finally {
+    hideLoader();
+  }
 });
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+
+async function loadLocations() {
+  const res = await fetch(SHEET_URL);
+  if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+  const csv = await res.text();
+  const rows = parseCSV(csv);
+  return Promise.all(rows.map(geocodeLocation));
+}
+
+function parseCSV(csv) {
+  const [, ...rows] = csv.trim().split("\n"); // ignore la ligne de headers
+  return rows
+    .map((row) => {
+      const [city, activity, description, infos1, infos2, infos3, link] =
+        parseRow(row);
+      return {
+        city,
+        activity,
+        description,
+        infos: [infos1, infos2, infos3].filter(Boolean),
+        link,
+      };
+    })
+    .filter((loc) => loc.city);
+}
+
+function parseRow(row) {
+  const result = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < row.length; i++) {
+    const ch = row[i];
+    if (ch === '"') {
+      if (inQuotes && row[i + 1] === '"') { field += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === "," && !inQuotes) {
+      result.push(field.trim());
+      field = "";
+    } else {
+      field += ch;
+    }
+  }
+  result.push(field.trim());
+  return result;
+}
+
+// TODO: si la sheet grandit, ajouter des colonnes lat/lng pour éviter N requêtes de géocodage au chargement
+async function geocodeLocation(location) {
+  const query = encodeURIComponent(location.city);
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${mapboxgl.accessToken}&country=fr&limit=1&language=fr`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data.features?.length) {
+    throw new Error(`Ville introuvable : ${location.city}`);
+  }
+  return { ...location, coordinates: data.features[0].center };
+}
 
 // ─── MARKERS ──────────────────────────────────────────────────────────────────
 
-// Clone le marker SVG depuis le placeholder — une seule source de vérité dans le HTML.
 const markerTemplate = document.querySelector(".placeholder .marker");
 
 function createMarkerEl() {
@@ -54,14 +100,40 @@ function createMarkerEl() {
   return el;
 }
 
-LOCATIONS.forEach((location) => {
-  const el = createMarkerEl();
-  el.addEventListener("click", () => {
-    setActiveMarker(el);
-    showCard(location);
+function addMarkers(locations) {
+  locations.forEach((location) => {
+    const el = createMarkerEl();
+    el.addEventListener("click", () => {
+      setActiveMarker(el);
+      showCard(location);
+    });
+    new mapboxgl.Marker(el).setLngLat(location.coordinates).addTo(map);
   });
-  new mapboxgl.Marker(el).setLngLat(location.coordinates).addTo(map);
-});
+}
+
+// ─── LOADER ───────────────────────────────────────────────────────────────────
+
+function showLoader() {
+  map.dragPan.disable();
+  map.keyboard.disable();
+  map.doubleClickZoom.disable();
+  map.touchZoomRotate.disable();
+
+  const overlay = document.createElement("div");
+  overlay.id = "map-loader";
+  const markerEl = markerTemplate.cloneNode(true);
+  markerEl.classList.add("loading");
+  overlay.appendChild(markerEl);
+  document.getElementById("map").appendChild(overlay);
+}
+
+function hideLoader() {
+  document.getElementById("map-loader")?.remove();
+  map.dragPan.enable();
+  map.keyboard.enable();
+  map.doubleClickZoom.enable();
+  map.touchZoomRotate.enable();
+}
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 
@@ -70,7 +142,6 @@ const card = document.getElementById("location-card");
 
 const fields = {
   title: document.getElementById("title"),
-  address: document.getElementById("address"),
   activity: document.getElementById("activity"),
   description: document.getElementById("description"),
   infos: document.getElementById("infos"),
@@ -87,12 +158,16 @@ function setActiveMarker(el) {
 
 function showCard(location) {
   fields.title.textContent = location.city;
-  fields.address.textContent = location.address;
   fields.activity.textContent = location.activity;
   fields.description.textContent = location.description;
-  fields.infos.textContent = location.infos;
+  fields.infos.replaceChildren(
+    ...location.infos.map((info) => {
+      const li = document.createElement("li");
+      li.textContent = info;
+      return li;
+    })
+  );
   fields.link.href = location.link;
-
   placeholder.classList.add("hidden");
   card.classList.remove("hidden");
 }

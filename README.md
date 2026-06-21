@@ -6,12 +6,13 @@ Carte interactive des lieux de pratique, construite en HTML / CSS / Vanilla JS a
 
 - Node.js ≥ 18
 - Un token Mapbox ([account.mapbox.com](https://account.mapbox.com))
+- Une Google Sheet partagée en "Tout le monde avec le lien peut voir"
 
 ## Installation
 
 ```bash
 cp .env.example .env
-# Renseigner VITE_MAPBOX_TOKEN dans .env
+# Renseigner VITE_MAPBOX_TOKEN et VITE_SHEET_ID dans .env
 npm install
 ```
 
@@ -37,8 +38,8 @@ npm run preview    # prévisualise le build en local
 
 Le build est configuré dans `netlify.toml` (`npx vite build` → `dist/`).
 
-Ajouter la variable d'environnement dans Netlify :  
-**Site settings → Environment variables → `VITE_MAPBOX_TOKEN`**
+Ajouter les variables d'environnement dans Netlify :  
+**Site settings → Environment variables → `VITE_MAPBOX_TOKEN`** et **`VITE_SHEET_ID`**
 
 ```bash
 # Première mise en ligne
@@ -58,7 +59,7 @@ netlify deploy --prod
 hmetaiji-map/
 ├── index.html       # Structure, sidebar, SVG markers
 ├── style.css        # Styles (variables, carte, fiche lieu, markers, responsive)
-├── main.js          # Données locations[], init Mapbox, markers, interactions
+├── main.js          # Fetch Google Sheet, géocodage, init Mapbox, markers, interactions
 ├── .env             # VITE_MAPBOX_TOKEN (non commité)
 ├── .env.example     # Template à commiter
 └── netlify.toml     # Config build + headers
