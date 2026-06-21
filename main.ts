@@ -32,7 +32,15 @@ map.on("load", async () => {
     type: "vector",
     url: "mapbox://xavxyz.9vcx1li9ymy3",
   });
+
   map.scrollZoom.disable();
+  map.dragPan.disable();
+  map.dragRotate.disable();
+  map.keyboard.disable();
+  map.doubleClickZoom.disable();
+  map.touchZoomRotate.disable();
+  map.touchPitch.disable();
+  map.boxZoom.disable();
 
   showLoader();
   try {
@@ -129,11 +137,6 @@ function addMarkers(locations: Location[]): void {
 // ─── LOADER ───────────────────────────────────────────────────────────────────
 
 function showLoader(): void {
-  map.dragPan.disable();
-  map.keyboard.disable();
-  map.doubleClickZoom.disable();
-  map.touchZoomRotate.disable();
-
   const overlay = document.createElement("div");
   overlay.id = "map-loader";
   const markerEl = markerTemplate.cloneNode(true) as HTMLElement;
@@ -144,10 +147,6 @@ function showLoader(): void {
 
 function hideLoader(): void {
   document.getElementById("map-loader")?.remove();
-  map.dragPan.enable();
-  map.keyboard.enable();
-  map.doubleClickZoom.enable();
-  map.touchZoomRotate.enable();
 }
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
