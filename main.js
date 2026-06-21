@@ -44,8 +44,9 @@ function parseCSV(csv) {
   const [, ...rows] = csv.trim().split("\n"); // ignore la ligne de headers
   return rows
     .map((row) => {
-      const [city, lat, lng, activity, description, infos1, infos2, infos3, link] =
+      const [city, lng, lat, activity, description, infos1, infos2, infos3, link] =
         parseRow(row);
+
       return {
         city,
         coordinates: [parseFloat(lng), parseFloat(lat)],
