@@ -42,21 +42,28 @@ async function loadLocations() {
 
 function parseCSV(csv) {
   const [, ...rows] = csv.trim().split("\n"); // ignore la ligne de headers
-  return rows
-    .map((row) => {
-      const [city, lng, lat, activity, description, infos1, infos2, infos3, link] =
-        parseRow(row);
+  return rows.map((row) => {
+    const [
+      city,
+      lng,
+      lat,
+      activity,
+      description,
+      infos1,
+      infos2,
+      infos3,
+      link,
+    ] = parseRow(row);
 
-      return {
-        city,
-        coordinates: [parseFloat(lng), parseFloat(lat)],
-        activity,
-        description,
-        infos: [infos1, infos2, infos3].filter(Boolean),
-        link,
-      };
-    })
-    .filter((loc) => loc.city && !isNaN(parseFloat(lat)));
+    return {
+      city,
+      coordinates: [parseFloat(lng), parseFloat(lat)],
+      activity,
+      description,
+      infos: [infos1, infos2, infos3].filter(Boolean),
+      link,
+    };
+  });
 }
 
 function parseRow(row) {
@@ -66,8 +73,10 @@ function parseRow(row) {
   for (let i = 0; i < row.length; i++) {
     const ch = row[i];
     if (ch === '"') {
-      if (inQuotes && row[i + 1] === '"') { field += '"'; i++; }
-      else inQuotes = !inQuotes;
+      if (inQuotes && row[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else inQuotes = !inQuotes;
     } else if (ch === "," && !inQuotes) {
       result.push(field.trim());
       field = "";
@@ -154,7 +163,7 @@ function showCard(location) {
       const li = document.createElement("li");
       li.textContent = info;
       return li;
-    })
+    }),
   );
   fields.link.href = location.link;
   placeholder.classList.add("hidden");
