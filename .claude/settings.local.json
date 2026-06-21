@@ -5,7 +5,16 @@
       "WebFetch(domain:cdpn.io)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "WebFetch(domain:docs.google.com)"
+      "WebFetch(domain:docs.google.com)",
+      "Bash(npm install *)",
+      "Bash(git checkout *)",
+      "Bash(which gh *)",
+      "Read(//Applications/Claude.app/Contents/Resources/**)",
+      "Read(//Users/xavier/bin/**)",
+      "Read(//Users/xavier/.local/bin/**)",
+      "Read(//Users/xavier/.config/gh/**)",
+      "Bash(security find-generic-password *)",
+      "Bash(security find-internet-password *)"
     ]
   }
 }
