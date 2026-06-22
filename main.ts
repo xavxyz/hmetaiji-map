@@ -7,10 +7,34 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
+enum Activity {
+  COURS_HEBDO        = "COURS HEBDO",
+  CYCLE_JOURNEES     = "CYCLE JOURNEES",
+  CYCLE_WEEKENDS     = "CYCLE WEEKENDS",
+  STAGE_PETIT_CERCLE = "STAGE PETIT CERCLE",
+  STAGE_RESIDENTIEL  = "STAGE RESIDENTIEL",
+  GROUPE_DE_PRATIQUE = "GROUPE DE PRATIQUE",
+}
+
+const ACTIVITY_LABEL: Record<Activity, string> = {
+  [Activity.COURS_HEBDO]:        "Cours hebdo",
+  [Activity.CYCLE_JOURNEES]:     "Cycle journées",
+  [Activity.CYCLE_WEEKENDS]:     "Cycle weekends",
+  [Activity.STAGE_PETIT_CERCLE]: "Stage petit cercle",
+  [Activity.STAGE_RESIDENTIEL]:  "Stage résidentiel",
+  [Activity.GROUPE_DE_PRATIQUE]: "Groupe de pratique",
+};
+
+const KNOWN_ACTIVITIES = new Set<string>(Object.values(Activity));
+
+function toActivity(s: string): Activity | null {
+  return KNOWN_ACTIVITIES.has(s) ? (s as Activity) : null;
+}
+
 interface Location {
   city: string;
   coordinates: [number, number];
-  activity: string;
+  activities: Activity[];
   description: string;
   infos: string[];
   link: string;
@@ -83,7 +107,10 @@ function parseCSV(csv: string): Location[] {
       return {
         city,
         coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
-        activity,
+        activities: activity
+          .split(",")
+          .map((s) => toActivity(s.trim()))
+          .filter((a): a is Activity => a !== null),
         description,
         infos: [infos1, infos2, infos3].filter(Boolean),
         link,
@@ -120,20 +147,81 @@ const markerTemplate = document.querySelector<HTMLElement>(
   ".placeholder .marker",
 )!;
 
-function createMarkerEl(): HTMLElement {
+function cloneMarker(): HTMLElement {
   const el = markerTemplate.cloneNode(true) as HTMLElement;
   el.classList.remove("big");
   return el;
 }
 
+function createMarkerEl(): HTMLElement {
+  return cloneMarker();
+}
+
+// Populate static decorative markers (slots are inside .hidden card, so no flash)
+document.getElementById("card-marker-slot")!.replaceWith(cloneMarker());
+const infosMarker = cloneMarker();
+infosMarker.classList.add("sm");
+document.getElementById("infos-marker-slot")!.replaceWith(infosMarker);
+
+interface MarkerEntry {
+  marker: mapboxgl.Marker;
+  el: HTMLElement;
+  location: Location;
+  visible: boolean;
+}
+
+let markerEntries: MarkerEntry[] = [];
+
 function addMarkers(locations: Location[]): void {
-  locations.forEach((location) => {
+  markerEntries = locations.map((location) => {
     const el = createMarkerEl();
+    const marker = new mapboxgl.Marker(el).setLngLat(location.coordinates);
     el.addEventListener("click", () => {
       setActiveMarker(el);
       showCard(location);
     });
-    new mapboxgl.Marker(el).setLngLat(location.coordinates).addTo(map);
+    return { marker, el, location, visible: false };
+  });
+  applyFilters();
+}
+
+// ─── FILTERS ──────────────────────────────────────────────────────────────────
+
+const activeFilters = new Set<Activity>(Object.values(Activity));
+
+const filterContainer = document.querySelector<HTMLElement>(".filter-buttons")!;
+(Object.values(Activity) as Activity[]).forEach((activity) => {
+  const btn = document.createElement("button");
+  btn.className = "filter-btn active";
+  btn.dataset.filter = activity;
+  btn.textContent = ACTIVITY_LABEL[activity];
+  btn.addEventListener("click", () => {
+    if (activeFilters.has(activity)) {
+      activeFilters.delete(activity);
+      btn.classList.remove("active");
+    } else {
+      activeFilters.add(activity);
+      btn.classList.add("active");
+    }
+    applyFilters();
+  });
+  filterContainer.appendChild(btn);
+});
+
+function applyFilters(): void {
+  markerEntries.forEach((entry) => {
+    // Locations with no recognized activity are always visible
+    const { activities } = entry.location;
+    const shouldShow =
+      activities.length === 0 || activities.some((a) => activeFilters.has(a));
+    if (shouldShow === entry.visible) return;
+    entry.visible = shouldShow;
+    if (shouldShow) {
+      entry.marker.addTo(map);
+    } else {
+      entry.marker.remove();
+      if (entry.el === activeMarker) hideCard();
+    }
   });
 }
 
@@ -142,7 +230,7 @@ function addMarkers(locations: Location[]): void {
 function showLoader(): void {
   const overlay = document.createElement("div");
   overlay.id = "map-loader";
-  const markerEl = markerTemplate.cloneNode(true) as HTMLElement;
+  const markerEl = cloneMarker();
   markerEl.classList.add("loading");
   overlay.appendChild(markerEl);
   document.getElementById("map")!.appendChild(overlay);
@@ -159,7 +247,7 @@ const card = document.getElementById("location-card")!;
 
 const fields = {
   title: document.getElementById("title")!,
-  activity: document.getElementById("activity")!,
+  activities: document.getElementById("activities")!,
   description: document.getElementById("description")!,
   infos: document.getElementById("infos")!,
   link: document.getElementById("link") as HTMLAnchorElement,
@@ -175,7 +263,14 @@ function setActiveMarker(el: HTMLElement | null): void {
 
 function showCard(location: Location): void {
   fields.title.textContent = location.city;
-  fields.activity.textContent = location.activity;
+  fields.activities.replaceChildren(
+    ...location.activities.map((act) => {
+      const banner = document.createElement("div");
+      banner.className = "activity-banner";
+      banner.textContent = act;
+      return banner;
+    }),
+  );
   fields.description.textContent = location.description;
   fields.infos.replaceChildren(
     ...location.infos.map((info) => {

@@ -12,10 +12,9 @@
 
       <aside class="sidebar">
         <div id="placeholder" class="placeholder">
-          <h2>Clique sur la carte</h2>
-          <p>
-            pour en savoir plus sur les lieux de pratique et les activités
-            concernées.
+          <p class="placeholder-text">
+            <strong>Clique sur la carte</strong> pour en savoir plus sur les
+            lieux de pratique et les activités concernées.
           </p>
           <div class="marker big">
             <svg
@@ -40,23 +39,37 @@
           <button id="close-btn" class="close-btn">×</button>
 
           <div class="header">
-            <h1 id="title"></h1>
+            <div class="header-top">
+              <div id="card-marker-slot" class="marker"></div>
+              <h1 id="title"></h1>
+            </div>
           </div>
 
           <div class="section">
-            <h3 id="activity"></h3>
+            <div id="activities"></div>
             <p id="description"></p>
           </div>
 
           <div class="section">
-            <h4>Infos pratiques</h4>
+            <h4 class="section-title">
+              <div id="infos-marker-slot" class="marker sm"></div>
+              Infos pratiques :
+            </h4>
             <ul id="infos"></ul>
           </div>
 
-          <a id="link" href="#" class="btn"> EN SAVOIR PLUS </a>
+          <a id="link" href="#" class="btn">EN SAVOIR PLUS</a>
         </div>
       </aside>
     </div>
+
+    <nav class="filter-bar">
+      <p class="filter-label">
+        Tu peux également <strong>filtrer les lieux</strong> selon les types
+        d'activités qui t'intéressent :
+      </p>
+      <div class="filter-buttons"></div>
+    </nav>
 
     <script type="module" src="main.ts"></script>
   </body>
