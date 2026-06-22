@@ -7,10 +7,34 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
+enum Activity {
+  COURS_HEBDO        = "COURS HEBDO",
+  CYCLE_JOURNEES     = "CYCLE JOURNEES",
+  CYCLE_WEEKENDS     = "CYCLE WEEKENDS",
+  STAGE_PETIT_CERCLE = "STAGE PETIT CERCLE",
+  STAGE_RESIDENTIEL  = "STAGE RESIDENTIEL",
+  GROUPE_DE_PRATIQUE = "GROUPE DE PRATIQUE",
+}
+
+const ACTIVITY_LABEL: Record<Activity, string> = {
+  [Activity.COURS_HEBDO]:        "Cours hebdo",
+  [Activity.CYCLE_JOURNEES]:     "Cycle journées",
+  [Activity.CYCLE_WEEKENDS]:     "Cycle weekends",
+  [Activity.STAGE_PETIT_CERCLE]: "Stage petit cercle",
+  [Activity.STAGE_RESIDENTIEL]:  "Stage résidentiel",
+  [Activity.GROUPE_DE_PRATIQUE]: "Groupe de pratique",
+};
+
+const KNOWN_ACTIVITIES = new Set<string>(Object.values(Activity));
+
+function toActivity(s: string): Activity | null {
+  return KNOWN_ACTIVITIES.has(s) ? (s as Activity) : null;
+}
+
 interface Location {
   city: string;
   coordinates: [number, number];
-  activities: string[];
+  activities: Activity[];
   description: string;
   infos: string[];
   link: string;
@@ -83,7 +107,10 @@ function parseCSV(csv: string): Location[] {
       return {
         city,
         coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
-        activities: activity.split("|").map((s) => s.trim()).filter(Boolean),
+        activities: activity
+          .split(",")
+          .map((s) => toActivity(s.trim()))
+          .filter((a): a is Activity => a !== null),
         description,
         infos: [infos1, infos2, infos3].filter(Boolean),
         link,
@@ -160,29 +187,33 @@ function addMarkers(locations: Location[]): void {
 
 // ─── FILTERS ──────────────────────────────────────────────────────────────────
 
-const activeFilters = new Set<string>(
-  Array.from(document.querySelectorAll<HTMLButtonElement>(".filter-btn.active")).map(
-    (btn) => btn.dataset.filter!,
-  ),
-);
+const activeFilters = new Set<Activity>(Object.values(Activity));
 
-document.querySelectorAll<HTMLButtonElement>(".filter-btn").forEach((btn) => {
+const filterContainer = document.querySelector<HTMLElement>(".filter-buttons")!;
+(Object.values(Activity) as Activity[]).forEach((activity) => {
+  const btn = document.createElement("button");
+  btn.className = "filter-btn active";
+  btn.dataset.filter = activity;
+  btn.textContent = ACTIVITY_LABEL[activity];
   btn.addEventListener("click", () => {
-    const filter = btn.dataset.filter!;
-    if (activeFilters.has(filter)) {
-      activeFilters.delete(filter);
+    if (activeFilters.has(activity)) {
+      activeFilters.delete(activity);
       btn.classList.remove("active");
     } else {
-      activeFilters.add(filter);
+      activeFilters.add(activity);
       btn.classList.add("active");
     }
     applyFilters();
   });
+  filterContainer.appendChild(btn);
 });
 
 function applyFilters(): void {
   markerEntries.forEach((entry) => {
-    const shouldShow = entry.location.activities.some((a) => activeFilters.has(a));
+    // Locations with no recognized activity are always visible
+    const { activities } = entry.location;
+    const shouldShow =
+      activities.length === 0 || activities.some((a) => activeFilters.has(a));
     if (shouldShow === entry.visible) return;
     entry.visible = shouldShow;
     if (shouldShow) {

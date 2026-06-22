@@ -186,10 +186,16 @@ body {
    BANDEAU ACTIVITÉ
 -------------------------------------------------- */
 
-.activity-banner {
-    display: inline-block;
+#activities {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     margin-top: 24px;
     margin-bottom: 22px;
+}
+
+.activity-banner {
+    display: block;
     background: black;
     color: white;
     font-size: 0.95rem;
