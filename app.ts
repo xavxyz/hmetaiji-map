@@ -123,16 +123,16 @@ const MARKER_SVG = `
 
 const TEMPLATE = `
   <div class="app">
-    <div id="map"></div>
+    <div id="placeholder" class="placeholder">
+      <p class="placeholder-text">
+        <strong>Clique sur la carte</strong> pour en savoir plus sur les
+        lieux de pratique et les activités concernées.
+      </p>
+      <div class="marker big">${MARKER_SVG}</div>
+    </div>
 
-    <aside class="sidebar">
-      <div id="placeholder" class="placeholder">
-        <p class="placeholder-text">
-          <strong>Clique sur la carte</strong> pour en savoir plus sur les
-          lieux de pratique et les activités concernées.
-        </p>
-        <div class="marker big">${MARKER_SVG}</div>
-      </div>
+    <div class="map-wrap">
+      <div id="map"></div>
 
       <div id="location-card" class="location-card hidden">
         <button id="close-btn" class="close-btn">×</button>
@@ -159,7 +159,7 @@ const TEMPLATE = `
 
         <a id="link" href="#" class="btn">EN SAVOIR PLUS</a>
       </div>
-    </aside>
+    </div>
   </div>
 
   <nav class="filter-bar">

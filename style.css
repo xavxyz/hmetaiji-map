@@ -5,8 +5,6 @@
     --bg: #fff;
     --text: #333;
     --line: #cfcfcf;
-
-    --sidebar-width: 540px;
 }
 
 * {
@@ -32,7 +30,11 @@ body {
 
 .app {
     display: flex;
+    flex-direction: column;
     width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
     flex: 1;
     min-height: 0;
 }
@@ -41,8 +43,14 @@ body {
    CARTE
 -------------------------------------------------- */
 
+.map-wrap {
+    position: relative;
+    height: 600px;
+}
+
 #map {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     background: var(--bg);
     position: relative;
 }
@@ -71,59 +79,80 @@ body {
 }
 
 /* --------------------------------------------------
-   SIDEBAR
+   PLACEHOLDER (bandeau horizontal, au-dessus de la carte)
 -------------------------------------------------- */
 
-.sidebar {
-    width: var(--sidebar-width);
-    padding: 40px;
-    background: var(--bg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.location-card,
 .placeholder {
-    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 16px;
+    padding: 20px 30px;
     background: white;
     border: 1px solid var(--orange);
-    position: relative;
-}
-
-/* --------------------------------------------------
-   PLACEHOLDER
--------------------------------------------------- */
-
-.placeholder {
-    min-height: 340px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    padding: 50px;
+    overflow: hidden;
+    max-height: 220px;
+    transition: opacity .3s ease, max-height .3s ease,
+                padding .3s ease, margin .3s ease, border-width .3s ease;
 }
 
 .placeholder-text {
-    max-width: 300px;
-    margin: 0 auto;
-    line-height: 1.8;
-    font-size: 1.2rem;
-    text-align: center;
+    margin: 0;
+    line-height: 1.6;
+    font-size: 1.1rem;
+    text-align: left;
 }
 
-.placeholder-logo {
-    margin-top: 40px;
+.placeholder .marker.big {
+    width: 56px;
+    height: 56px;
+    margin: 0;
 }
 
 /* --------------------------------------------------
-   FICHE LIEU
+   FICHE LIEU (overlay au-dessus de la carte)
 -------------------------------------------------- */
 
 .location-card {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 5;
+    width: 380px;
+    max-width: calc(100% - 32px);
     padding: 28px 36px 36px;
+    background: white;
+    border: 1px solid var(--orange);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .15);
+    transition: opacity .3s ease, transform .3s ease;
 }
 
+/* --------------------------------------------------
+   TRANSITIONS PLACEHOLDER <-> FICHE LIEU
+-------------------------------------------------- */
+
+.placeholder.hidden {
+    display: flex;
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    pointer-events: none;
+}
+
+.location-card.hidden {
+    display: block;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+}
+
+/* repli par défaut pour tout autre usage de .hidden */
 .hidden {
     display: none;
 }
@@ -169,11 +198,13 @@ body {
 
 .header h1 {
     margin: 0;
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 800;
     letter-spacing: 1px;
     color: var(--orange);
     text-transform: uppercase;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .address {
@@ -362,22 +393,33 @@ body {
 
 @media (max-width: 1100px) {
     .app {
+        padding: 0 12px;
+    }
+}
+
+@media (max-width: 700px) {
+    .map-wrap {
+        height: 60vh;
+    }
+
+    .placeholder {
         flex-direction: column;
+        text-align: center;
+        gap: 16px;
     }
 
-    #map {
-        height: 50vh;
+    .placeholder-text {
+        text-align: center;
     }
 
-    .sidebar {
-        width: 100%;
-        padding: 20px;
-        overflow-x: hidden;
+    .location-card {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: none;
     }
 
     .header h1 {
         font-size: 2rem;
-        overflow-wrap: break-word;
-        word-break: break-word;
     }
 }
