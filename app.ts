@@ -148,7 +148,7 @@ const TEMPLATE = `
 
           <div class="section">
             <h4 class="section-title">
-              Infos pratiques :
+              Infos pratiques
             </h4>
             <ul id="infos"></ul>
           </div>
