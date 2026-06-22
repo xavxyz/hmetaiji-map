@@ -249,12 +249,6 @@ export function mount(container: HTMLElement): void {
     return cloneMarker();
   }
 
-  // Le marker d'en-tête (#card-marker-slot) porte le SVG et sert de gabarit
-  // pour tous les autres. On remplit le slot "infos" depuis cette même source.
-  const infosMarker = cloneMarker();
-  infosMarker.classList.add("sm");
-  container.querySelector("#infos-marker-slot")!.replaceWith(infosMarker);
-
   interface MarkerEntry {
     marker: mapboxgl.Marker;
     el: HTMLElement;
