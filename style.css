@@ -5,8 +5,6 @@
     --bg: #fff;
     --text: #333;
     --line: #cfcfcf;
-
-    --sidebar-width: 540px;
 }
 
 * {
@@ -32,7 +30,11 @@ body {
 
 .app {
     display: flex;
+    flex-direction: column;
     width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
     flex: 1;
     min-height: 0;
 }
@@ -41,8 +43,14 @@ body {
    CARTE
 -------------------------------------------------- */
 
+.map-wrap {
+    position: relative;
+    height: 600px;
+}
+
 #map {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     background: var(--bg);
     position: relative;
 }
@@ -71,61 +79,57 @@ body {
 }
 
 /* --------------------------------------------------
-   SIDEBAR
+   FICHE / PLACEHOLDER UNIFIÉS (overlay sur la carte)
 -------------------------------------------------- */
 
-.sidebar {
-    width: var(--sidebar-width);
-    padding: 40px;
-    background: var(--bg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.location-card,
-.placeholder {
-    width: 100%;
+/* Élément unique en overlay, sur toute la largeur de la carte : bascule entre
+   l'état "placeholder" (invite, non fermable) et l'état "fiche lieu".
+   C'est lui qui porte le cadre et dont la hauteur est animée. */
+.location-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
     background: white;
     border: 1px solid var(--orange);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .15);
+    overflow: hidden;
+}
+
+/* Le marker reste fixe en haut à gauche : il ne participe pas au fondu. */
+#card-marker-slot {
+    position: absolute;
+    top: 28px;
+    left: 36px;
+    z-index: 2;
+}
+
+/* Contenu : seule l'opacité est animée (fade-out / fade-in piloté en JS). */
+.card-content {
     position: relative;
-}
-
-/* --------------------------------------------------
-   PLACEHOLDER
--------------------------------------------------- */
-
-.placeholder {
-    min-height: 340px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    padding: 50px;
-}
-
-.placeholder-text {
-    max-width: 300px;
-    margin: 0 auto;
-    line-height: 1.8;
-    font-size: 1.2rem;
-    text-align: center;
-}
-
-.placeholder-logo {
-    margin-top: 40px;
-}
-
-/* --------------------------------------------------
-   FICHE LIEU
--------------------------------------------------- */
-
-.location-card {
+    z-index: 1;
     padding: 28px 36px 36px;
 }
 
-.hidden {
+/* --------------------------------------------------
+   ÉTAT PLACEHOLDER (invite, non fermable)
+-------------------------------------------------- */
+
+.location-card.placeholder-mode .close-btn,
+.location-card.placeholder-mode .section,
+.location-card.placeholder-mode .btn {
     display: none;
+}
+
+/* L'invite occupe la place du titre, avec un style de paragraphe. */
+.location-card.placeholder-mode #title {
+    font-size: 1.1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text);
 }
 
 /* --------------------------------------------------
@@ -149,31 +153,24 @@ body {
    EN-TÊTE
 -------------------------------------------------- */
 
+/* Le titre laisse la place au marker fixe (haut-gauche). */
 .header {
     display: flex;
-    flex-direction: column;
-    padding-right: 40px;
-}
-
-.header-top {
-    display: flex;
     align-items: center;
-    gap: 18px;
-}
-
-.logo {
-    width: 64px;
-    height: 64px;
-    flex-shrink: 0;
+    min-height: 42px;
+    padding-left: 58px;
+    padding-right: 40px;
 }
 
 .header h1 {
     margin: 0;
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 800;
     letter-spacing: 1px;
     color: var(--orange);
     text-transform: uppercase;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .address {
@@ -362,22 +359,16 @@ body {
 
 @media (max-width: 1100px) {
     .app {
-        flex-direction: column;
+        padding: 0 12px;
     }
+}
 
-    #map {
-        height: 50vh;
-    }
-
-    .sidebar {
-        width: 100%;
-        padding: 20px;
-        overflow-x: hidden;
+@media (max-width: 700px) {
+    .map-wrap {
+        height: 60vh;
     }
 
     .header h1 {
         font-size: 2rem;
-        overflow-wrap: break-word;
-        word-break: break-word;
     }
 }
