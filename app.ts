@@ -121,43 +121,41 @@ const MARKER_SVG = `
     />
   </svg>`;
 
+// Texte d'invite affiché à la place du titre dans l'état placeholder.
+const PLACEHOLDER_HTML =
+  "<strong>Clique sur la carte</strong> pour en savoir plus sur les lieux de pratique et les activités concernées.";
+
 const TEMPLATE = `
   <div class="app">
-    <div id="placeholder" class="placeholder">
-      <p class="placeholder-text">
-        <strong>Clique sur la carte</strong> pour en savoir plus sur les
-        lieux de pratique et les activités concernées.
-      </p>
-      <div class="marker big">${MARKER_SVG}</div>
-    </div>
-
     <div class="map-wrap">
       <div id="map"></div>
 
-      <div id="location-card" class="location-card hidden">
-        <button id="close-btn" class="close-btn">×</button>
+      <div id="location-card" class="location-card placeholder-mode">
+        <!-- Le marker reste fixe en haut à gauche et ne participe pas au fondu. -->
+        <div id="card-marker-slot" class="marker">${MARKER_SVG}</div>
 
-        <div class="header">
-          <div class="header-top">
-            <div id="card-marker-slot" class="marker"></div>
+        <div class="card-content">
+          <button id="close-btn" class="close-btn">×</button>
+
+          <div class="header">
             <h1 id="title"></h1>
           </div>
-        </div>
 
-        <div class="section">
-          <div id="activities"></div>
-          <p id="description"></p>
-        </div>
+          <div class="section">
+            <div id="activities"></div>
+            <p id="description"></p>
+          </div>
 
-        <div class="section">
-          <h4 class="section-title">
-            <div id="infos-marker-slot" class="marker sm"></div>
-            Infos pratiques :
-          </h4>
-          <ul id="infos"></ul>
-        </div>
+          <div class="section">
+            <h4 class="section-title">
+              <div id="infos-marker-slot" class="marker sm"></div>
+              Infos pratiques :
+            </h4>
+            <ul id="infos"></ul>
+          </div>
 
-        <a id="link" href="#" class="btn">EN SAVOIR PLUS</a>
+          <a id="link" href="#" class="btn">EN SAVOIR PLUS</a>
+        </div>
       </div>
     </div>
   </div>
@@ -191,19 +189,13 @@ export function mount(container: HTMLElement): void {
   container.innerHTML = TEMPLATE;
 
   const mapEl = container.querySelector<HTMLElement>("#map")!;
-  const placeholder = container.querySelector<HTMLElement>("#placeholder")!;
   const card = container.querySelector<HTMLElement>("#location-card")!;
-  const markerTemplate = container.querySelector<HTMLElement>(
-    ".placeholder .marker",
-  )!;
+  const cardContent = container.querySelector<HTMLElement>(".card-content")!;
+  const markerTemplate =
+    container.querySelector<HTMLElement>("#card-marker-slot")!;
 
-  const fields = {
-    title: container.querySelector<HTMLElement>("#title")!,
-    activities: container.querySelector<HTMLElement>("#activities")!,
-    description: container.querySelector<HTMLElement>("#description")!,
-    infos: container.querySelector<HTMLElement>("#infos")!,
-    link: container.querySelector<HTMLAnchorElement>("#link")!,
-  };
+  // L'état initial est le placeholder : l'invite occupe la place du titre.
+  card.querySelector<HTMLElement>("#title")!.innerHTML = PLACEHOLDER_HTML;
 
   // ─── MAP ──────────────────────────────────────────────────────────────────
 
@@ -249,7 +241,8 @@ export function mount(container: HTMLElement): void {
 
   function cloneMarker(): HTMLElement {
     const el = markerTemplate.cloneNode(true) as HTMLElement;
-    el.classList.remove("big");
+    el.removeAttribute("id");
+    el.classList.remove("sm");
     return el;
   }
 
@@ -257,8 +250,8 @@ export function mount(container: HTMLElement): void {
     return cloneMarker();
   }
 
-  // Populate static decorative markers (slots are inside .hidden card, so no flash)
-  container.querySelector("#card-marker-slot")!.replaceWith(cloneMarker());
+  // Le marker d'en-tête (#card-marker-slot) porte le SVG et sert de gabarit
+  // pour tous les autres. On remplit le slot "infos" depuis cette même source.
   const infosMarker = cloneMarker();
   infosMarker.classList.add("sm");
   container.querySelector("#infos-marker-slot")!.replaceWith(infosMarker);
@@ -341,7 +334,102 @@ export function mount(container: HTMLElement): void {
     mapEl.querySelector("#map-loader")?.remove();
   }
 
-  // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+  // ─── CARTE / FICHE UNIFIÉES ───────────────────────────────────────────────
+  // Un seul élément bascule entre l'état "placeholder" et l'état "fiche".
+  // Séquence d'animation (t = interaction) :
+  //   • fade-out du contenu (ease-in, 200 ms) — le marker top-left reste fixe
+  //   • transition de taille (200 ms, délai 100 ms)
+  //   • fade-in du nouveau contenu (ease-out, 400 ms, délai 200 ms)
+
+  const FADE_OUT_MS = 200;
+  const SIZE_MS = 200;
+  const SIZE_DELAY = 100;
+  const FADE_IN_MS = 400;
+  const FADE_IN_DELAY = 200;
+
+  let morphTimers: number[] = [];
+
+  function morphCard(apply: () => void): void {
+    morphTimers.forEach((t) => window.clearTimeout(t));
+    morphTimers = [];
+
+    const startH = card.offsetHeight;
+
+    // Pré-mesure de la hauteur cible sans repeindre le nouveau contenu :
+    // on applique, on mesure, puis on restaure l'état courant dans la même
+    // tâche JS (aucune peinture intermédiaire).
+    const savedHTML = cardContent.innerHTML;
+    const wasPlaceholder = card.classList.contains("placeholder-mode");
+    card.style.transition = "none";
+    card.style.height = "";
+    apply();
+    const endH = card.offsetHeight;
+    cardContent.innerHTML = savedHTML;
+    card.classList.toggle("placeholder-mode", wasPlaceholder);
+
+    // Verrouille la hauteur de départ, contenu pleinement visible.
+    cardContent.style.transition = "none";
+    cardContent.style.opacity = "1";
+    card.style.height = `${startH}px`;
+    void card.offsetHeight; // reflow
+
+    // Fade-out du contenu courant (ease-in).
+    cardContent.style.transition = `opacity ${FADE_OUT_MS}ms ease-in`;
+    cardContent.style.opacity = "0";
+
+    // Transition de taille (démarre à SIZE_DELAY).
+    card.style.transition = `height ${SIZE_MS}ms ease ${SIZE_DELAY}ms`;
+    card.style.height = `${endH}px`;
+
+    // Bascule du contenu (invisible) puis fade-in (ease-out).
+    morphTimers.push(
+      window.setTimeout(() => {
+        apply();
+        cardContent.style.transition = `opacity ${FADE_IN_MS}ms ease-out`;
+        cardContent.style.opacity = "1";
+      }, FADE_IN_DELAY),
+    );
+
+    // Libère la hauteur explicite pour laisser le contenu se redimensionner.
+    morphTimers.push(
+      window.setTimeout(
+        () => {
+          card.style.transition = "";
+          card.style.height = "";
+          cardContent.style.transition = "";
+        },
+        FADE_IN_DELAY + FADE_IN_MS + 20,
+      ),
+    );
+  }
+
+  function fillFull(location: Location): void {
+    card.classList.remove("placeholder-mode");
+    card.querySelector<HTMLElement>("#title")!.textContent = location.city;
+    card.querySelector<HTMLElement>("#activities")!.replaceChildren(
+      ...location.activities.map((act) => {
+        const banner = document.createElement("div");
+        banner.className = "activity-banner";
+        banner.textContent = act;
+        return banner;
+      }),
+    );
+    card.querySelector<HTMLElement>("#description")!.textContent =
+      location.description;
+    card.querySelector<HTMLElement>("#infos")!.replaceChildren(
+      ...location.infos.map((info) => {
+        const li = document.createElement("li");
+        li.textContent = info;
+        return li;
+      }),
+    );
+    card.querySelector<HTMLAnchorElement>("#link")!.href = location.link;
+  }
+
+  function fillPlaceholder(): void {
+    card.classList.add("placeholder-mode");
+    card.querySelector<HTMLElement>("#title")!.innerHTML = PLACEHOLDER_HTML;
+  }
 
   let activeMarker: HTMLElement | null = null;
 
@@ -352,33 +440,16 @@ export function mount(container: HTMLElement): void {
   }
 
   function showCard(location: Location): void {
-    fields.title.textContent = location.city;
-    fields.activities.replaceChildren(
-      ...location.activities.map((act) => {
-        const banner = document.createElement("div");
-        banner.className = "activity-banner";
-        banner.textContent = act;
-        return banner;
-      }),
-    );
-    fields.description.textContent = location.description;
-    fields.infos.replaceChildren(
-      ...location.infos.map((info) => {
-        const li = document.createElement("li");
-        li.textContent = info;
-        return li;
-      }),
-    );
-    fields.link.href = location.link;
-    placeholder.classList.add("hidden");
-    card.classList.remove("hidden");
+    morphCard(() => fillFull(location));
   }
 
   function hideCard(): void {
-    card.classList.add("hidden");
-    placeholder.classList.remove("hidden");
+    morphCard(fillPlaceholder);
     setActiveMarker(null);
   }
 
-  container.querySelector("#close-btn")!.addEventListener("click", hideCard);
+  // Délégation : le bouton de fermeture est recréé lors des bascules de contenu.
+  card.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest("#close-btn")) hideCard();
+  });
 }

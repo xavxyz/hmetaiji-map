@@ -79,82 +79,57 @@ body {
 }
 
 /* --------------------------------------------------
-   PLACEHOLDER (bandeau horizontal, au-dessus de la carte)
+   FICHE / PLACEHOLDER UNIFIÉS (overlay sur la carte)
 -------------------------------------------------- */
 
-.placeholder {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 28px;
-    margin-bottom: 16px;
-    padding: 20px 30px;
-    background: white;
-    border: 1px solid var(--orange);
-    overflow: hidden;
-    max-height: 220px;
-    transition: opacity .3s ease, max-height .3s ease,
-                padding .3s ease, margin .3s ease, border-width .3s ease;
-}
-
-.placeholder-text {
-    margin: 0;
-    line-height: 1.6;
-    font-size: 1.1rem;
-    text-align: left;
-}
-
-.placeholder .marker.big {
-    width: 56px;
-    height: 56px;
-    margin: 0;
-}
-
-/* --------------------------------------------------
-   FICHE LIEU (overlay au-dessus de la carte)
--------------------------------------------------- */
-
+/* Élément unique en overlay, sur toute la largeur de la carte : bascule entre
+   l'état "placeholder" (invite, non fermable) et l'état "fiche lieu".
+   C'est lui qui porte le cadre et dont la hauteur est animée. */
 .location-card {
     position: absolute;
-    top: 16px;
-    left: 16px;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 5;
-    width: 380px;
-    max-width: calc(100% - 32px);
-    padding: 28px 36px 36px;
     background: white;
     border: 1px solid var(--orange);
     box-shadow: 0 6px 24px rgba(0, 0, 0, .15);
-    transition: opacity .3s ease, transform .3s ease;
+    overflow: hidden;
+}
+
+/* Le marker reste fixe en haut à gauche : il ne participe pas au fondu. */
+#card-marker-slot {
+    position: absolute;
+    top: 28px;
+    left: 36px;
+    z-index: 2;
+}
+
+/* Contenu : seule l'opacité est animée (fade-out / fade-in piloté en JS). */
+.card-content {
+    position: relative;
+    z-index: 1;
+    padding: 28px 36px 36px;
 }
 
 /* --------------------------------------------------
-   TRANSITIONS PLACEHOLDER <-> FICHE LIEU
+   ÉTAT PLACEHOLDER (invite, non fermable)
 -------------------------------------------------- */
 
-.placeholder.hidden {
-    display: flex;
-    opacity: 0;
-    max-height: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-    pointer-events: none;
-}
-
-.location-card.hidden {
-    display: block;
-    opacity: 0;
-    transform: translateY(8px);
-    pointer-events: none;
-}
-
-/* repli par défaut pour tout autre usage de .hidden */
-.hidden {
+.location-card.placeholder-mode .close-btn,
+.location-card.placeholder-mode .section,
+.location-card.placeholder-mode .btn {
     display: none;
+}
+
+/* L'invite occupe la place du titre, avec un style de paragraphe. */
+.location-card.placeholder-mode #title {
+    font-size: 1.1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text);
 }
 
 /* --------------------------------------------------
@@ -178,22 +153,13 @@ body {
    EN-TÊTE
 -------------------------------------------------- */
 
+/* Le titre laisse la place au marker fixe (haut-gauche). */
 .header {
     display: flex;
-    flex-direction: column;
-    padding-right: 40px;
-}
-
-.header-top {
-    display: flex;
     align-items: center;
-    gap: 18px;
-}
-
-.logo {
-    width: 64px;
-    height: 64px;
-    flex-shrink: 0;
+    min-height: 42px;
+    padding-left: 58px;
+    padding-right: 40px;
 }
 
 .header h1 {
@@ -400,23 +366,6 @@ body {
 @media (max-width: 700px) {
     .map-wrap {
         height: 60vh;
-    }
-
-    .placeholder {
-        flex-direction: column;
-        text-align: center;
-        gap: 16px;
-    }
-
-    .placeholder-text {
-        text-align: center;
-    }
-
-    .location-card {
-        left: 12px;
-        right: 12px;
-        width: auto;
-        max-width: none;
     }
 
     .header h1 {
