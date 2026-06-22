@@ -10,7 +10,7 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE
 interface Location {
   city: string;
   coordinates: [number, number];
-  activity: string;
+  activities: string[];
   description: string;
   infos: string[];
   link: string;
@@ -83,7 +83,7 @@ function parseCSV(csv: string): Location[] {
       return {
         city,
         coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
-        activity,
+        activities: activity.split("|").map((s) => s.trim()).filter(Boolean),
         description,
         infos: [infos1, infos2, infos3].filter(Boolean),
         link,
@@ -159,7 +159,7 @@ const card = document.getElementById("location-card")!;
 
 const fields = {
   title: document.getElementById("title")!,
-  activity: document.getElementById("activity")!,
+  activities: document.getElementById("activities")!,
   description: document.getElementById("description")!,
   infos: document.getElementById("infos")!,
   link: document.getElementById("link") as HTMLAnchorElement,
@@ -175,7 +175,14 @@ function setActiveMarker(el: HTMLElement | null): void {
 
 function showCard(location: Location): void {
   fields.title.textContent = location.city;
-  fields.activity.textContent = location.activity;
+  fields.activities.replaceChildren(
+    ...location.activities.map((act) => {
+      const banner = document.createElement("div");
+      banner.className = "activity-banner";
+      banner.textContent = act;
+      return banner;
+    }),
+  );
   fields.description.textContent = location.description;
   fields.infos.replaceChildren(
     ...location.infos.map((info) => {
