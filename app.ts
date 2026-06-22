@@ -148,7 +148,6 @@ const TEMPLATE = `
 
           <div class="section">
             <h4 class="section-title">
-              <div id="infos-marker-slot" class="marker sm"></div>
               Infos pratiques :
             </h4>
             <ul id="infos"></ul>
