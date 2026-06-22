@@ -11,5 +11,5 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true
   },
-  "include": ["main.ts", "vite-env.d.ts"]
+  "include": ["embed.ts", "app.ts", "vite-env.d.ts"]
 }
