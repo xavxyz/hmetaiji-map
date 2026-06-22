@@ -101,18 +101,12 @@ body {
     padding: 50px;
 }
 
-.placeholder h2 {
-    margin: 0 0 10px;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #222;
-}
-
-.placeholder p {
+.placeholder-text {
     max-width: 300px;
     margin: 0 auto;
     line-height: 1.8;
     font-size: 1.2rem;
+    text-align: center;
 }
 
 .placeholder-logo {
@@ -267,12 +261,20 @@ body {
     width: 42px;
     height: 42px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .marker.big {
     width: 84px;
     height: 84px;
     margin: 0 auto;
+    cursor: default;
+}
+
+.marker.sm {
+    width: 24px;
+    height: 24px;
+    cursor: default;
 }
 
 .marker svg {
