@@ -285,23 +285,16 @@ body {
     height: 100%;
 }
 
-.marker-circle {
-    fill: var(--orange);
-    stroke-width: 0;
+/* couleurs du symbole via custom properties (traversent le shadow tree de <use>) */
+
+.marker {
+    --marker-circle-fill: var(--orange);
+    --marker-symbol-fill: white;
 }
 
-.marker-symbol {
-    fill: white;
-}
-
-/* état sélectionné */
-
-.marker.active .marker-circle {
-    fill: white;
-}
-
-.marker.active .marker-symbol {
-    fill: var(--orange);
+.marker.active {
+    --marker-circle-fill: white;
+    --marker-symbol-fill: var(--orange);
 }
 
 /* --------------------------------------------------
