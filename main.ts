@@ -126,14 +126,61 @@ function createMarkerEl(): HTMLElement {
   return el;
 }
 
+interface MarkerEntry {
+  marker: mapboxgl.Marker;
+  el: HTMLElement;
+  location: Location;
+  visible: boolean;
+}
+
+let markerEntries: MarkerEntry[] = [];
+
 function addMarkers(locations: Location[]): void {
-  locations.forEach((location) => {
+  markerEntries = locations.map((location) => {
     const el = createMarkerEl();
+    const marker = new mapboxgl.Marker(el).setLngLat(location.coordinates);
     el.addEventListener("click", () => {
       setActiveMarker(el);
       showCard(location);
     });
-    new mapboxgl.Marker(el).setLngLat(location.coordinates).addTo(map);
+    return { marker, el, location, visible: false };
+  });
+  applyFilters();
+}
+
+// ─── FILTERS ──────────────────────────────────────────────────────────────────
+
+const activeFilters = new Set<string>(
+  Array.from(document.querySelectorAll<HTMLButtonElement>(".filter-btn.active")).map(
+    (btn) => btn.dataset.filter!,
+  ),
+);
+
+document.querySelectorAll<HTMLButtonElement>(".filter-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const filter = btn.dataset.filter!;
+    if (activeFilters.has(filter)) {
+      activeFilters.delete(filter);
+      btn.classList.remove("active");
+    } else {
+      activeFilters.add(filter);
+      btn.classList.add("active");
+    }
+    applyFilters();
+  });
+});
+
+function applyFilters(): void {
+  markerEntries.forEach((entry) => {
+    const shouldShow = entry.location.activities.some((a) => activeFilters.has(a));
+    if (shouldShow === entry.visible) return;
+    entry.visible = shouldShow;
+    if (shouldShow) {
+      entry.marker.addTo(map);
+    } else {
+      entry.marker.remove();
+      if (entry.el === activeMarker) hideCard();
+    }
   });
 }
 
