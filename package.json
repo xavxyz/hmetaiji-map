@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --mode page",
+    "build:lib": "vite build",
+    "build:page": "vite build --mode page",
     "preview": "vite preview"
   },
   "devDependencies": {
