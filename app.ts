@@ -452,4 +452,14 @@ export function mount(container: HTMLElement): void {
   card.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).closest("#close-btn")) hideCard();
   });
+
+  // Tout clic en dehors de la card (quand elle affiche une fiche) la referme.
+  // On ignore les clics sur un marker, qui basculent vers une autre fiche.
+  document.addEventListener("click", (e) => {
+    if (card.classList.contains("placeholder-mode")) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("#location-card") || target.closest(".mapboxgl-marker"))
+      return;
+    hideCard();
+  });
 }
