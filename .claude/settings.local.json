@@ -14,7 +14,13 @@
       "Read(//Users/xavier/.local/bin/**)",
       "Read(//Users/xavier/.config/gh/**)",
       "Bash(security find-generic-password *)",
-      "Bash(security find-internet-password *)"
+      "Bash(security find-internet-password *)",
+      "Bash(gh issue *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:github-production-user-asset-*.s3.amazonaws.com)",
+      "Read(//Users/xavier/.nvm/versions/node/**)",
+      "Bash(command -v mise)",
+      "Bash(git push *)"
     ]
   }
 }
