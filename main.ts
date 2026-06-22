@@ -120,11 +120,21 @@ const markerTemplate = document.querySelector<HTMLElement>(
   ".placeholder .marker",
 )!;
 
-function createMarkerEl(): HTMLElement {
+function cloneMarker(): HTMLElement {
   const el = markerTemplate.cloneNode(true) as HTMLElement;
   el.classList.remove("big");
   return el;
 }
+
+function createMarkerEl(): HTMLElement {
+  return cloneMarker();
+}
+
+// Populate static decorative markers (slots are inside .hidden card, so no flash)
+document.getElementById("card-marker-slot")!.replaceWith(cloneMarker());
+const infosMarker = cloneMarker();
+infosMarker.classList.add("sm");
+document.getElementById("infos-marker-slot")!.replaceWith(infosMarker);
 
 interface MarkerEntry {
   marker: mapboxgl.Marker;
@@ -189,7 +199,7 @@ function applyFilters(): void {
 function showLoader(): void {
   const overlay = document.createElement("div");
   overlay.id = "map-loader";
-  const markerEl = markerTemplate.cloneNode(true) as HTMLElement;
+  const markerEl = cloneMarker();
   markerEl.classList.add("loading");
   overlay.appendChild(markerEl);
   document.getElementById("map")!.appendChild(overlay);
