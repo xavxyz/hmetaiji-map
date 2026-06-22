@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
       build: {
         // Ne pas vider dist : on conserve le bundle IIFE de la passe `lib`.
         emptyOutDir: false,
+        // Inliner les pictogrammes en data-URL plutôt que de les émettre en
+        // fichiers séparés.
+        assetsInlineLimit: 100_000,
       },
       server: { cors: true },
     };
@@ -25,6 +28,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     build: {
+      // Les pictogrammes (~10 Ko chacun) doivent être inlinés en data-URL dans
+      // le bundle IIFE pour rester un seul fichier autonome (pas de requête
+      // d'asset séparée côté page hôte).
+      assetsInlineLimit: 100_000,
       lib: {
         entry: "embed.ts",
         name: "HmetaijiMap",
