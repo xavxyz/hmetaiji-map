@@ -9,20 +9,20 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 enum Activity {
-  COURS_HEBDO        = "COURS HEBDO",
-  CYCLE_JOURNEES     = "CYCLE JOURNEES",
-  CYCLE_WEEKENDS     = "CYCLE WEEKENDS",
+  COURS_HEBDO = "COURS HEBDO",
+  CYCLE_JOURNEES = "CYCLE JOURNEES",
+  CYCLE_WEEKENDS = "CYCLE WEEKENDS",
   STAGE_PETIT_CERCLE = "STAGE PETIT CERCLE",
-  STAGE_RESIDENTIEL  = "STAGE RESIDENTIEL",
+  STAGE_RESIDENTIEL = "STAGE RESIDENTIEL",
   GROUPE_DE_PRATIQUE = "GROUPE DE PRATIQUE",
 }
 
 const ACTIVITY_LABEL: Record<Activity, string> = {
-  [Activity.COURS_HEBDO]:        "Cours hebdo",
-  [Activity.CYCLE_JOURNEES]:     "Cycle journées",
-  [Activity.CYCLE_WEEKENDS]:     "Cycle weekends",
+  [Activity.COURS_HEBDO]: "Cours hebdo",
+  [Activity.CYCLE_JOURNEES]: "Cycle journées",
+  [Activity.CYCLE_WEEKENDS]: "Cycle weekends",
   [Activity.STAGE_PETIT_CERCLE]: "Stage petit cercle",
-  [Activity.STAGE_RESIDENTIEL]:  "Stage résidentiel",
+  [Activity.STAGE_RESIDENTIEL]: "Stage résidentiel",
   [Activity.GROUPE_DE_PRATIQUE]: "Groupe de pratique",
 };
 
