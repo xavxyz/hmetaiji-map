@@ -177,7 +177,7 @@ const MARKER_SVG = `
 
 // Texte d'invite affiché à la place du titre dans l'état placeholder.
 const PLACEHOLDER_HTML =
-  "<strong>Clique sur la carte</strong> pour en savoir plus sur les lieux de pratique et les activités concernées.";
+  "<strong>Cliquez sur la carte</strong> pour en savoir plus sur les lieux de pratique et les activités concernées.";
 
 // Invite affichée en mode « groupes d'entraînement » (1re phrase en gras).
 const GROUP_PLACEHOLDER_HTML =
@@ -186,8 +186,6 @@ const GROUP_PLACEHOLDER_HTML =
 const TEMPLATE = `
   <div class="app">
     <div class="map-wrap">
-      <div id="map"></div>
-
       <div id="location-card" class="location-card placeholder-mode">
         <!-- Le marker reste fixe en haut à gauche et ne participe pas au fondu. -->
         <div id="card-marker-slot" class="marker">${MARKER_SVG}</div>
@@ -221,13 +219,15 @@ const TEMPLATE = `
           </div>
         </div>
       </div>
+
+      <div id="map"></div>
     </div>
   </div>
 
   <nav class="filter-bar">
     <p class="filter-label">
-      Tu peux également <strong>filtrer les lieux</strong> selon les types
-      d'activités qui t'intéressent :
+      Vous pouvez également <strong>filtrer les lieux</strong> selon les types
+      d'activités qui vous intéressent :
     </p>
     <div class="filter-buttons"></div>
   </nav>`;
@@ -413,13 +413,16 @@ export function mount(container: HTMLElement): void {
     if (activity === GROUP_FILTER) {
       groupsMode = !groupsMode;
     } else if (groupsMode) {
-      // On quitte la couche groupes en (ré)activant uniquement le filtre cliqué.
+      // On quitte la couche groupes en activant uniquement le filtre cliqué.
       groupsMode = false;
       activeFilters.clear();
       activeFilters.add(activity);
-    } else if (activeFilters.has(activity)) {
-      activeFilters.delete(activity);
+    } else if (activeFilters.size === 1 && activeFilters.has(activity)) {
+      // Re-clic sur le filtre déjà seul actif → on réaffiche tous les lieux.
+      LOCATION_ACTIVITIES.forEach((a) => activeFilters.add(a));
     } else {
+      // Un clic n'affiche que ce filtre et désactive tous les autres.
+      activeFilters.clear();
       activeFilters.add(activity);
     }
     if (groupsMode !== wasGroupsMode) hideCard();
