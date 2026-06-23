@@ -496,24 +496,22 @@ export function mount(container: HTMLElement): void {
   }
 
   function syncLabelFilter(): void {
-    // Mirrors applyLocationFilters logic: no-activity locations are always visible
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let filter: any;
     if (groupsMode) {
-      filter = ["==", 0, 1];
-    } else {
-      const activityConditions = Array.from(activeFilters).map((activity) => [
-        "in",
-        activity,
-        ["get", "activities"],
-      ]);
-      filter = [
-        "any",
-        ["==", ["get", "activityCount"], 0],
-        ...activityConditions,
-      ];
+      map.setLayoutProperty("location-labels", "visibility", "none");
+      return;
     }
-    map.setFilter("location-labels", filter);
+    map.setLayoutProperty("location-labels", "visibility", "visible");
+    // Mirrors applyLocationFilters logic: no-activity locations are always visible
+    const activityConditions = Array.from(activeFilters).map((activity) => [
+      "in",
+      activity,
+      ["get", "activities"],
+    ]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    map.setFilter("location-labels", ["any",
+      ["==", ["get", "activityCount"], 0],
+      ...activityConditions,
+    ] as any);
   }
 
   // ─── RENDER (couches mutuellement exclusives) ───────────────────────────────
