@@ -17,7 +17,7 @@ body {
   height: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  font-family: "Avenir Next", "Montserrat", sans-serif;
+  font-family: "Josefin Sans", Arial, Helvetica, sans-serif;
 
   background: var(--bg);
   color: var(--text);
@@ -51,6 +51,7 @@ body {
   height: 600px;
   background: var(--bg);
   position: relative;
+  margin-top: 150px;
 }
 
 /* --------------------------------------------------
@@ -94,7 +95,7 @@ body {
      qui n'est donc jamais recouverte à l'état initial.
    - En fiche : il repasse en overlay et se superpose à la carte. */
 .location-card {
-  position: relative;
+  position: absolute;
   z-index: 5;
   background: white;
   border: 1px solid var(--orange);

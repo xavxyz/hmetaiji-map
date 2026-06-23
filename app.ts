@@ -181,7 +181,7 @@ const PLACEHOLDER_HTML =
 
 // Invite affichée en mode « groupes d'entraînement » (1re phrase en gras).
 const GROUP_PLACEHOLDER_HTML =
-  "<strong>Vous trouverez ici une liste de pratiquants, élèves de Julien Desbordes.</strong> Si vous suivez le programme en ligne Discover Taiji ou suivez des cours dans une des écoles affiliées Heaven Man Earth, vous pouvez contacter une de ces personnes pour organiser des rencontres d'entrainement.";
+  "<strong>Vous trouverez ici une liste de pratiquants, élèves de Julien Desbordes.</strong> Vous pouvez les contacter pour organiser des rencontres d'entrainement.";
 
 const TEMPLATE = `
   <div class="app">
