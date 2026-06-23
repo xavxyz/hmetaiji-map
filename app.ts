@@ -195,9 +195,8 @@ const TEMPLATE = `
         <div class="card-content">
           <button id="close-btn" class="close-btn">×</button>
 
-          <p id="group-region" class="section-title group-only"></p>
-
           <div class="header">
+            <div id="group-region" class="activity-banner group-only"></div>
             <h1 id="title"></h1>
           </div>
 

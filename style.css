@@ -327,10 +327,15 @@ body {
     transform: scale(1.12);
 }
 
-/* Sur-titre « région » au-dessus du nom du département (style section-title). */
+/* Fiche groupe : région en bandeau blanc-sur-noir au-dessus du nom (orange). */
+.location-card.group-mode .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
 #group-region {
-    padding-left: 58px;
-    margin: 0 0 4px;
+    align-self: flex-start;
 }
 
 /* En mode groupes, le logo HME remplace le marker SVG d'en-tête. */
