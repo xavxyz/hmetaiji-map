@@ -12,7 +12,7 @@ Carte interactive des lieux de pratique, construite en HTML / CSS / Vanilla JS a
 
 ```bash
 cp .env.example .env
-# Renseigner VITE_MAPBOX_TOKEN et VITE_SHEET_ID dans .env
+# Renseigner les variables d'environnements
 npm install
 ```
 
@@ -53,7 +53,7 @@ npm run build      # génère dist/hmetaiji-map.iife.js (JS + CSS inlinés)
 npm run preview    # prévisualise le build en local
 ```
 
-`VITE_MAPBOX_TOKEN` et `VITE_SHEET_ID` sont bakés dans le bundle au build :
+Les variables d'environnement sont bakés dans le bundle au build :
 restreindre le token Mapbox par domaine depuis le dashboard Mapbox.
 
 ## Déploiement (Netlify)
