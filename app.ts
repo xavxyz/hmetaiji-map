@@ -2,9 +2,28 @@ import mapboxgl from "mapbox-gl";
 import mapboxCss from "mapbox-gl/dist/mapbox-gl.css?inline";
 import appCss from "./style.css?inline";
 
+import picto1 from "./assets/pictos/picto-1.png";
+import picto2 from "./assets/pictos/picto-2.png";
+import picto3 from "./assets/pictos/picto-3.png";
+import picto4 from "./assets/pictos/picto-4.png";
+import picto5 from "./assets/pictos/picto-5.png";
+import picto6 from "./assets/pictos/picto-6.png";
+import picto7 from "./assets/pictos/picto-7.png";
+import groupIcon from "./assets/groupes-icon.jpg";
+
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}/gviz/tq?tqx=out:csv`;
+const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+// Onglet « lieux » = première feuille (par défaut) ; onglet « groupes » ciblé par gid.
+const SHEET_URL = SHEET_BASE;
+const GROUPS_GID = import.meta.env.VITE_GROUPS_GID;
+const GROUPS_SHEET_URL = GROUPS_GID
+  ? `${SHEET_BASE}&gid=${encodeURIComponent(GROUPS_GID)}`
+  : null;
+
+// Pictogramme attribué à chaque groupe d'après l'index de sa ligne dans l'onglet.
+const PICTOS = [picto1, picto2, picto3, picto4, picto5, picto6, picto7];
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -39,6 +58,15 @@ interface Location {
   description: string;
   infos: string[];
   link: string;
+}
+
+interface TrainingGroup {
+  region: string;
+  departement: string;
+  coordinates: [number, number];
+  responsable: string;
+  email: string;
+  telephone: string;
 }
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
@@ -78,6 +106,32 @@ function parseCSV(csv: string): Location[] {
       };
     })
     .filter((loc) => loc.city !== "" && !isNaN(loc.coordinates[0]));
+}
+
+async function loadGroups(): Promise<TrainingGroup[]> {
+  if (!GROUPS_SHEET_URL) return [];
+  const res = await fetch(GROUPS_SHEET_URL);
+  if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+  const csv = await res.text();
+  return parseGroupsCSV(csv);
+}
+
+function parseGroupsCSV(csv: string): TrainingGroup[] {
+  const [, ...rows] = csv.trim().split("\n");
+  return rows
+    .map((row) => {
+      const [region, departement, lng, lat, responsable, email, telephone] =
+        parseRow(row);
+      return {
+        region,
+        departement,
+        coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
+        responsable,
+        email,
+        telephone,
+      };
+    })
+    .filter((g) => g.region !== "" && !isNaN(g.coordinates[0]));
 }
 
 function parseRow(row: string): string[] {
@@ -125,6 +179,10 @@ const MARKER_SVG = `
 const PLACEHOLDER_HTML =
   "<strong>Clique sur la carte</strong> pour en savoir plus sur les lieux de pratique et les activités concernées.";
 
+// Invite affichée en mode « groupes d'entraînement » (1re phrase en gras).
+const GROUP_PLACEHOLDER_HTML =
+  "<strong>Vous trouverez ici une liste de pratiquants, élèves de Julien Desbordes.</strong> Si vous suivez le programme en ligne Discover Taiji ou suivez des cours dans une des écoles affiliées Heaven Man Earth, vous pouvez contacter une de ces personnes pour organiser des rencontres d'entrainement.";
+
 const TEMPLATE = `
   <div class="app">
     <div class="map-wrap">
@@ -141,19 +199,26 @@ const TEMPLATE = `
             <h1 id="title"></h1>
           </div>
 
-          <div class="section">
+          <div class="section loc-only">
             <div id="activities"></div>
             <p id="description"></p>
           </div>
 
-          <div class="section">
+          <div class="section loc-only">
             <h4 class="section-title">
               Infos pratiques
             </h4>
             <ul id="infos"></ul>
           </div>
 
-          <a id="link" href="#" class="btn">EN SAVOIR PLUS</a>
+          <a id="link" href="#" class="btn loc-only">EN SAVOIR PLUS</a>
+
+          <div class="section group-only">
+            <div id="group-region" class="activity-banner"></div>
+            <p id="group-responsable" class="section-content"></p>
+            <a id="group-email" class="btn"></a>
+            <a id="group-tel" class="btn btn-secondary"></a>
+          </div>
         </div>
       </div>
     </div>
@@ -193,6 +258,9 @@ export function mount(container: HTMLElement): void {
   const markerTemplate =
     container.querySelector<HTMLElement>("#card-marker-slot")!;
 
+  // Logo affiché à la place du marker d'en-tête en mode groupes.
+  card.style.setProperty("--group-icon", `url(${groupIcon})`);
+
   // L'état initial est le placeholder : l'invite occupe la place du titre.
   card.querySelector<HTMLElement>("#title")!.innerHTML = PLACEHOLDER_HTML;
 
@@ -227,8 +295,14 @@ export function mount(container: HTMLElement): void {
 
     showLoader();
     try {
-      const locations = await loadLocations();
+      const [locations, groups] = await Promise.all([
+        loadLocations(),
+        loadGroups(),
+      ]);
       addMarkers(locations);
+      addGroupMarkers(groups);
+      syncFilterButtons();
+      render();
     } catch (err) {
       console.error("Erreur lors du chargement des données :", err);
     } finally {
@@ -268,34 +342,132 @@ export function mount(container: HTMLElement): void {
       });
       return { marker, el, location, visible: false };
     });
-    applyFilters();
+  }
+
+  // ─── GROUP MARKERS ────────────────────────────────────────────────────────
+
+  function pictoFor(index: number): string {
+    return PICTOS[index % PICTOS.length];
+  }
+
+  function createGroupMarkerEl(index: number): HTMLElement {
+    const el = document.createElement("div");
+    el.className = "group-marker";
+    el.style.setProperty("--picto", `url(${pictoFor(index)})`);
+    return el;
+  }
+
+  interface GroupEntry {
+    marker: mapboxgl.Marker;
+    el: HTMLElement;
+    group: TrainingGroup;
+    index: number;
+    visible: boolean;
+  }
+
+  let groupEntries: GroupEntry[] = [];
+
+  function addGroupMarkers(groups: TrainingGroup[]): void {
+    groupEntries = groups.map((group, index) => {
+      const el = createGroupMarkerEl(index);
+      const marker = new mapboxgl.Marker(el).setLngLat(group.coordinates);
+      el.addEventListener("click", () => {
+        setActiveMarker(el);
+        showGroupCard(group);
+      });
+      return { marker, el, group, index, visible: false };
+    });
   }
 
   // ─── FILTERS ────────────────────────────────────────────────────────────────
+  // Le filtre « Groupe de pratique » n'est pas un filtre d'activité comme les
+  // autres : il bascule sur la couche des groupes d'entraînement. Il est
+  // mutuellement exclusif avec les filtres de lieux — sélectionner « Groupe de
+  // pratique » masque les lieux et affiche les groupes ; sélectionner n'importe
+  // quel autre filtre masque les groupes et revient aux lieux.
 
-  const activeFilters = new Set<Activity>(Object.values(Activity));
+  const GROUP_FILTER = Activity.GROUPE_DE_PRATIQUE;
+  const LOCATION_ACTIVITIES = (Object.values(Activity) as Activity[]).filter(
+    (a) => a !== GROUP_FILTER,
+  );
+
+  let groupsMode = false;
+  const activeFilters = new Set<Activity>(LOCATION_ACTIVITIES);
 
   const filterContainer =
     container.querySelector<HTMLElement>(".filter-buttons")!;
+  const filterButtons = new Map<Activity, HTMLButtonElement>();
+
   (Object.values(Activity) as Activity[]).forEach((activity) => {
     const btn = document.createElement("button");
-    btn.className = "filter-btn active";
+    btn.className = "filter-btn";
     btn.dataset.filter = activity;
     btn.textContent = ACTIVITY_LABEL[activity];
-    btn.addEventListener("click", () => {
-      if (activeFilters.has(activity)) {
-        activeFilters.delete(activity);
-        btn.classList.remove("active");
-      } else {
-        activeFilters.add(activity);
-        btn.classList.add("active");
-      }
-      applyFilters();
-    });
+    btn.addEventListener("click", () => onFilterClick(activity));
+    filterButtons.set(activity, btn);
     filterContainer.appendChild(btn);
   });
 
-  function applyFilters(): void {
+  function onFilterClick(activity: Activity): void {
+    const wasGroupsMode = groupsMode;
+    if (activity === GROUP_FILTER) {
+      groupsMode = !groupsMode;
+    } else if (groupsMode) {
+      // On quitte la couche groupes en (ré)activant uniquement le filtre cliqué.
+      groupsMode = false;
+      activeFilters.clear();
+      activeFilters.add(activity);
+    } else if (activeFilters.has(activity)) {
+      activeFilters.delete(activity);
+    } else {
+      activeFilters.add(activity);
+    }
+    if (groupsMode !== wasGroupsMode) hideCard();
+    syncFilterButtons();
+    render();
+  }
+
+  function syncFilterButtons(): void {
+    filterButtons.forEach((btn, activity) => {
+      const active =
+        activity === GROUP_FILTER
+          ? groupsMode
+          : !groupsMode && activeFilters.has(activity);
+      btn.classList.toggle("active", active);
+    });
+  }
+
+  // ─── RENDER (couches mutuellement exclusives) ───────────────────────────────
+
+  function render(): void {
+    if (groupsMode) {
+      setLocationsVisible(false);
+      setGroupsVisible(true);
+    } else {
+      setGroupsVisible(false);
+      applyLocationFilters();
+    }
+  }
+
+  function setGroupsVisible(visible: boolean): void {
+    groupEntries.forEach((entry) => {
+      if (visible === entry.visible) return;
+      entry.visible = visible;
+      if (visible) entry.marker.addTo(map);
+      else entry.marker.remove();
+    });
+  }
+
+  function setLocationsVisible(visible: boolean): void {
+    markerEntries.forEach((entry) => {
+      if (visible === entry.visible) return;
+      entry.visible = visible;
+      if (visible) entry.marker.addTo(map);
+      else entry.marker.remove();
+    });
+  }
+
+  function applyLocationFilters(): void {
     markerEntries.forEach((entry) => {
       // Locations with no recognized activity are always visible
       const { activities } = entry.location;
@@ -396,8 +568,21 @@ export function mount(container: HTMLElement): void {
     );
   }
 
+  // Bascule l'affichage des blocs lieu/groupe au sein de la card (styles inline
+  // sur des enfants de .card-content → sauvegardés/restaurés par morphCard).
+  function showOnly(kind: "loc" | "group" | "none"): void {
+    cardContent.querySelectorAll<HTMLElement>(".loc-only").forEach((el) => {
+      el.style.display = kind === "loc" ? "" : "none";
+    });
+    cardContent.querySelectorAll<HTMLElement>(".group-only").forEach((el) => {
+      el.style.display = kind === "group" ? "" : "none";
+    });
+  }
+
   function fillFull(location: Location): void {
     card.classList.remove("placeholder-mode");
+    card.classList.remove("group-mode");
+    showOnly("loc");
     card.querySelector<HTMLElement>("#title")!.textContent = location.city;
     card.querySelector<HTMLElement>("#activities")!.replaceChildren(
       ...location.activities.map((act) => {
@@ -419,9 +604,34 @@ export function mount(container: HTMLElement): void {
     card.querySelector<HTMLAnchorElement>("#link")!.href = location.link;
   }
 
+  function fillGroup(group: TrainingGroup): void {
+    card.classList.remove("placeholder-mode");
+    card.classList.add("group-mode");
+    showOnly("group");
+    card.querySelector<HTMLElement>("#group-region")!.textContent =
+      group.region;
+    card.querySelector<HTMLElement>("#title")!.textContent = group.departement;
+    card.querySelector<HTMLElement>("#group-responsable")!.textContent =
+      group.responsable;
+
+    const email = card.querySelector<HTMLAnchorElement>("#group-email")!;
+    email.textContent = group.email;
+    email.href = `mailto:${group.email}`;
+    email.style.display = group.email ? "" : "none";
+
+    const tel = card.querySelector<HTMLAnchorElement>("#group-tel")!;
+    tel.textContent = group.telephone;
+    tel.href = `tel:${group.telephone.replace(/\s+/g, "")}`;
+    tel.style.display = group.telephone ? "" : "none";
+  }
+
   function fillPlaceholder(): void {
     card.classList.add("placeholder-mode");
-    card.querySelector<HTMLElement>("#title")!.innerHTML = PLACEHOLDER_HTML;
+    card.classList.toggle("group-mode", groupsMode);
+    showOnly("none");
+    card.querySelector<HTMLElement>("#title")!.innerHTML = groupsMode
+      ? GROUP_PLACEHOLDER_HTML
+      : PLACEHOLDER_HTML;
   }
 
   let activeMarker: HTMLElement | null = null;
@@ -434,6 +644,10 @@ export function mount(container: HTMLElement): void {
 
   function showCard(location: Location): void {
     morphCard(() => fillFull(location));
+  }
+
+  function showGroupCard(group: TrainingGroup): void {
+    morphCard(() => fillGroup(group));
   }
 
   function hideCard(): void {

@@ -308,6 +308,55 @@ body {
 }
 
 /* --------------------------------------------------
+   MARKERS GROUPES (pictogrammes)
+-------------------------------------------------- */
+
+.group-marker {
+    width: 46px;
+    height: 56px;
+    cursor: pointer;
+    background-color: var(--text);
+    -webkit-mask: var(--picto) center / contain no-repeat;
+    mask: var(--picto) center / contain no-repeat;
+    transition: background-color .15s, transform .15s;
+}
+
+.group-marker:hover,
+.group-marker.active {
+    background-color: var(--orange);
+    transform: scale(1.12);
+}
+
+/* Fiche groupe : région en bandeau blanc-sur-noir sous le séparateur, comme
+   les bandeaux d'activité de la fiche lieu (le nom du département reste le
+   titre orange dans l'en-tête). */
+#group-region {
+    margin-bottom: 22px;
+}
+
+/* En mode groupes, le logo HME remplace le marker SVG d'en-tête. */
+.location-card.group-mode #card-marker-slot {
+    background: var(--group-icon) center / contain no-repeat;
+}
+
+.location-card.group-mode #card-marker-slot svg {
+    display: none;
+}
+
+/* Lien secondaire (téléphone) sous le bouton e-mail de la fiche groupe. */
+.btn-secondary {
+    margin-top: 12px;
+    background: var(--bg);
+    color: var(--orange);
+    border: 1px solid var(--orange);
+}
+
+.btn-secondary:hover {
+    background: var(--orange);
+    color: white;
+}
+
+/* --------------------------------------------------
    FILTER BAR
 -------------------------------------------------- */
 
