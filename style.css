@@ -50,7 +50,6 @@ body {
   height: 600px;
   background: var(--bg);
   position: relative;
-  margin-top: 150px;
 }
 
 /* --------------------------------------------------
@@ -84,17 +83,14 @@ body {
 }
 
 /* --------------------------------------------------
-   FICHE / PLACEHOLDER UNIFIÉS (overlay sur la carte)
+   FICHE (overlay sur la carte)
 -------------------------------------------------- */
 
-/* Élément unique qui bascule entre l'état "placeholder" (invite, non fermable)
-   et l'état "fiche lieu". C'est lui qui porte le cadre et dont la hauteur est
-   animée.
-   - En placeholder : il reste dans le flux, en bandeau au-dessus de la carte,
-     qui n'est donc jamais recouverte à l'état initial.
-   - En fiche : il repasse en overlay et se superpose à la carte. */
 .location-card {
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 5;
   background: white;
   border: 1px solid var(--orange);
@@ -102,14 +98,10 @@ body {
   overflow: hidden;
 }
 
-.location-card:not(.placeholder-mode) {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+.location-card.card-closed {
+  display: none;
 }
 
-/* Le marker reste fixe en haut à gauche : il ne participe pas au fondu. */
 #card-marker-slot {
   position: absolute;
   top: 28px;
@@ -117,31 +109,10 @@ body {
   z-index: 2;
 }
 
-/* Contenu : seule l'opacité est animée (fade-out / fade-in piloté en JS). */
 .card-content {
   position: relative;
   z-index: 1;
   padding: 28px 36px 36px;
-}
-
-/* --------------------------------------------------
-   ÉTAT PLACEHOLDER (invite, non fermable)
--------------------------------------------------- */
-
-.location-card.placeholder-mode .close-btn,
-.location-card.placeholder-mode .section,
-.location-card.placeholder-mode .btn {
-  display: none;
-}
-
-/* L'invite occupe la place du titre, avec un style de paragraphe. */
-.location-card.placeholder-mode #title {
-  font-size: 1.1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--text);
 }
 
 /* --------------------------------------------------
@@ -185,6 +156,8 @@ body {
   text-transform: uppercase;
   overflow-wrap: break-word;
   word-break: break-word;
+  /* Align with logo */
+  line-height: 1.4;
 }
 
 .address {

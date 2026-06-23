@@ -175,18 +175,10 @@ const MARKER_SVG = `
     />
   </svg>`;
 
-// Texte d'invite affiché à la place du titre dans l'état placeholder.
-const PLACEHOLDER_HTML =
-  "<strong>Cliquez sur la carte</strong> pour en savoir plus sur les lieux de pratique et les activités concernées.";
-
-// Invite affichée en mode « groupes d'entraînement » (1re phrase en gras).
-const GROUP_PLACEHOLDER_HTML =
-  "<strong>Vous trouverez ici une liste de pratiquants, élèves de Julien Desbordes.</strong> Vous pouvez les contacter pour organiser des rencontres d'entrainement.";
-
 const TEMPLATE = `
   <div class="app">
     <div class="map-wrap">
-      <div id="location-card" class="location-card placeholder-mode">
+      <div id="location-card" class="location-card card-closed">
         <!-- Le marker reste fixe en haut à gauche et ne participe pas au fondu. -->
         <div id="card-marker-slot" class="marker">${MARKER_SVG}</div>
 
@@ -260,9 +252,6 @@ export function mount(container: HTMLElement): void {
 
   // Logo affiché à la place du marker d'en-tête en mode groupes.
   card.style.setProperty("--group-icon", `url(${groupIcon})`);
-
-  // L'état initial est le placeholder : l'invite occupe la place du titre.
-  card.querySelector<HTMLElement>("#title")!.innerHTML = PLACEHOLDER_HTML;
 
   // ─── MAP ──────────────────────────────────────────────────────────────────
 
@@ -510,10 +499,7 @@ export function mount(container: HTMLElement): void {
   //   • fade-in du nouveau contenu (ease-out, 400 ms, délai 200 ms)
 
   const FADE_OUT_MS = 200;
-  const SIZE_MS = 200;
-  const SIZE_DELAY = 100;
   const FADE_IN_MS = 400;
-  const FADE_IN_DELAY = 200;
 
   let morphTimers: number[] = [];
 
@@ -521,53 +507,20 @@ export function mount(container: HTMLElement): void {
     morphTimers.forEach((t) => window.clearTimeout(t));
     morphTimers = [];
 
-    const startH = card.offsetHeight;
+    card.style.transition = `opacity ${FADE_OUT_MS}ms ease-in`;
+    card.style.opacity = "0";
 
-    // Pré-mesure de la hauteur cible sans repeindre le nouveau contenu :
-    // on applique, on mesure, puis on restaure l'état courant dans la même
-    // tâche JS (aucune peinture intermédiaire).
-    const savedHTML = cardContent.innerHTML;
-    const wasPlaceholder = card.classList.contains("placeholder-mode");
-    card.style.transition = "none";
-    card.style.height = "";
-    apply();
-    const endH = card.offsetHeight;
-    cardContent.innerHTML = savedHTML;
-    card.classList.toggle("placeholder-mode", wasPlaceholder);
-
-    // Verrouille la hauteur de départ, contenu pleinement visible.
-    cardContent.style.transition = "none";
-    cardContent.style.opacity = "1";
-    card.style.height = `${startH}px`;
-    void card.offsetHeight; // reflow
-
-    // Fade-out du contenu courant (ease-in).
-    cardContent.style.transition = `opacity ${FADE_OUT_MS}ms ease-in`;
-    cardContent.style.opacity = "0";
-
-    // Transition de taille (démarre à SIZE_DELAY).
-    card.style.transition = `height ${SIZE_MS}ms ease ${SIZE_DELAY}ms`;
-    card.style.height = `${endH}px`;
-
-    // Bascule du contenu (invisible) puis fade-in (ease-out).
     morphTimers.push(
       window.setTimeout(() => {
         apply();
-        cardContent.style.transition = `opacity ${FADE_IN_MS}ms ease-out`;
-        cardContent.style.opacity = "1";
-      }, FADE_IN_DELAY),
-    );
-
-    // Libère la hauteur explicite pour laisser le contenu se redimensionner.
-    morphTimers.push(
-      window.setTimeout(
-        () => {
-          card.style.transition = "";
-          card.style.height = "";
-          cardContent.style.transition = "";
-        },
-        FADE_IN_DELAY + FADE_IN_MS + 20,
-      ),
+        card.style.transition = `opacity ${FADE_IN_MS}ms ease-out`;
+        card.style.opacity = "1";
+        morphTimers.push(
+          window.setTimeout(() => {
+            card.style.transition = "";
+          }, FADE_IN_MS + 20),
+        );
+      }, FADE_OUT_MS),
     );
   }
 
@@ -628,15 +581,6 @@ export function mount(container: HTMLElement): void {
     tel.style.display = group.telephone ? "" : "none";
   }
 
-  function fillPlaceholder(): void {
-    card.classList.add("placeholder-mode");
-    card.classList.toggle("group-mode", groupsMode);
-    showOnly("none");
-    card.querySelector<HTMLElement>("#title")!.innerHTML = groupsMode
-      ? GROUP_PLACEHOLDER_HTML
-      : PLACEHOLDER_HTML;
-  }
-
   let activeMarker: HTMLElement | null = null;
 
   function setActiveMarker(el: HTMLElement | null): void {
@@ -645,17 +589,53 @@ export function mount(container: HTMLElement): void {
     activeMarker = el;
   }
 
+  function showFromHidden(fill: () => void): void {
+    morphTimers.forEach((t) => window.clearTimeout(t));
+    morphTimers = [];
+    fill();
+    card.classList.remove("card-closed");
+    card.style.transition = "none";
+    card.style.opacity = "0";
+    void card.offsetHeight;
+    card.style.transition = `opacity ${FADE_IN_MS}ms ease-out`;
+    card.style.opacity = "1";
+    morphTimers.push(
+      window.setTimeout(() => {
+        card.style.transition = "";
+      }, FADE_IN_MS + 20),
+    );
+  }
+
   function showCard(location: Location): void {
-    morphCard(() => fillFull(location));
+    if (card.classList.contains("card-closed")) {
+      showFromHidden(() => fillFull(location));
+    } else {
+      morphCard(() => fillFull(location));
+    }
   }
 
   function showGroupCard(group: TrainingGroup): void {
-    morphCard(() => fillGroup(group));
+    if (card.classList.contains("card-closed")) {
+      showFromHidden(() => fillGroup(group));
+    } else {
+      morphCard(() => fillGroup(group));
+    }
   }
 
   function hideCard(): void {
-    morphCard(fillPlaceholder);
+    if (card.classList.contains("card-closed")) return;
     setActiveMarker(null);
+    morphTimers.forEach((t) => window.clearTimeout(t));
+    morphTimers = [];
+    card.style.transition = `opacity ${FADE_OUT_MS}ms ease-in`;
+    card.style.opacity = "0";
+    morphTimers.push(
+      window.setTimeout(() => {
+        card.classList.add("card-closed");
+        card.style.transition = "";
+        card.style.opacity = "";
+      }, FADE_OUT_MS),
+    );
   }
 
   // Délégation : le bouton de fermeture est recréé lors des bascules de contenu.
@@ -666,7 +646,7 @@ export function mount(container: HTMLElement): void {
   // Tout clic en dehors de la card (quand elle affiche une fiche) la referme.
   // On ignore les clics sur un marker, qui basculent vers une autre fiche.
   document.addEventListener("click", (e) => {
-    if (card.classList.contains("placeholder-mode")) return;
+    if (card.classList.contains("card-closed")) return;
     const target = e.target as HTMLElement;
     if (target.closest("#location-card") || target.closest(".mapboxgl-marker"))
       return;
