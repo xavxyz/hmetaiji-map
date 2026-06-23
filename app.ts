@@ -58,6 +58,7 @@ interface Location {
   description: string;
   infos: string[];
   link: string;
+  labelPos: string;
 }
 
 interface TrainingGroup {
@@ -92,6 +93,7 @@ function parseCSV(csv: string): Location[] {
         infos2,
         infos3,
         link,
+        labelPos,
       ] = parseRow(row);
       return {
         city,
@@ -103,6 +105,7 @@ function parseCSV(csv: string): Location[] {
         description,
         infos: [infos1, infos2, infos3].filter(Boolean),
         link,
+        labelPos: labelPos || "top",
       };
     })
     .filter((loc) => loc.city !== "" && !isNaN(loc.coordinates[0]));
@@ -256,14 +259,14 @@ export function mount(container: HTMLElement): void {
 
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
+  const isMobile = window.matchMedia("(max-width: 700px)").matches;
+
   const map = new mapboxgl.Map({
     container: mapEl,
     style: "mapbox://styles/xavxyz/cmq9jsdv8002a01qp4ml05ho4",
-    bounds: [
-      [-4.9, 42.2], // SW — Finistère / Cerbère (Pyrénées)
-      [8.3, 51.1], // NE — Alsace / Dunkerque
-    ],
-    fitBoundsOptions: { padding: 40 },
+    ...(isMobile
+      ? { bounds: [[-3.5, 42.0], [8.3, 51.5]] as mapboxgl.LngLatBoundsLike, fitBoundsOptions: { padding: 8 } }
+      : { center: [2.5, 46.7] as [number, number], zoom: 5.05 }),
   });
 
   showLoader();
@@ -285,6 +288,7 @@ export function mount(container: HTMLElement): void {
       ]);
       addMarkers(locations);
       addGroupMarkers(groups);
+      addLabelLayer(locations);
       syncFilterButtons();
       render();
     } catch (err) {
@@ -424,6 +428,111 @@ export function mount(container: HTMLElement): void {
     });
   }
 
+  // ─── LABEL LAYER ────────────────────────────────────────────────────────────
+
+  function addLabelLayer(locations: Location[]): void {
+    map.addSource("location-labels", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: locations.map((l) => ({
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: l.coordinates },
+          properties: {
+            city: l.city,
+            activities: l.activities.join(","),
+            activityCount: l.activities.length,
+            labelPos: l.labelPos,
+          },
+        })),
+      },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const textAnchor: any = [
+      "match",
+      ["get", "labelPos"],
+      "bottom",
+      "top",
+      "left",
+      "right",
+      "right",
+      "left",
+      "bottom", // default → top
+    ];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const textOffset: any = [
+      "match",
+      ["get", "labelPos"],
+      "bottom",
+      ["literal", [0, 2.5]],
+      "left",
+      ["literal", [-2.5, 0]],
+      "right",
+      ["literal", [2.5, 0]],
+      ["literal", [0, -2.5]], // default → top
+    ];
+
+    map.addLayer({
+      id: "location-labels",
+      type: "symbol",
+      source: "location-labels",
+      layout: {
+        "text-field": ["get", "city"],
+        "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Regular"],
+        "text-anchor": textAnchor,
+        "text-offset": textOffset,
+        "text-size": 10,
+        "text-letter-spacing": 0.1,
+        "text-transform": "uppercase",
+        "text-allow-overlap": false,
+      },
+      paint: {
+        "text-color": "#ef8600",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.5,
+      },
+    });
+
+    map.on("click", "location-labels", (e) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const city = (e.features?.[0] as any)?.properties?.city as string | undefined;
+      if (!city) return;
+      const entry = markerEntries.find((m) => m.location.city === city);
+      if (!entry) return;
+      // Prevent the document-level listener from closing the card immediately
+      e.originalEvent.stopPropagation();
+      setActiveMarker(entry.el);
+      showCard(entry.location);
+    });
+
+    map.on("mouseenter", "location-labels", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "location-labels", () => {
+      map.getCanvas().style.cursor = "";
+    });
+  }
+
+  function syncLabelFilter(): void {
+    if (groupsMode) {
+      map.setLayoutProperty("location-labels", "visibility", "none");
+      return;
+    }
+    map.setLayoutProperty("location-labels", "visibility", "visible");
+    // Mirrors applyLocationFilters logic: no-activity locations are always visible
+    const activityConditions = Array.from(activeFilters).map((activity) => [
+      "in",
+      activity,
+      ["get", "activities"],
+    ]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    map.setFilter("location-labels", ["any",
+      ["==", ["get", "activityCount"], 0],
+      ...activityConditions,
+    ] as any);
+  }
+
   // ─── RENDER (couches mutuellement exclusives) ───────────────────────────────
 
   function render(): void {
@@ -434,6 +543,7 @@ export function mount(container: HTMLElement): void {
       setGroupsVisible(false);
       applyLocationFilters();
     }
+    syncLabelFilter();
   }
 
   function setGroupsVisible(visible: boolean): void {
@@ -548,7 +658,14 @@ export function mount(container: HTMLElement): void {
     card.querySelector<HTMLElement>("#infos")!.replaceChildren(
       ...location.infos.map((info) => {
         const li = document.createElement("li");
-        li.textContent = info;
+        const colonIdx = info.indexOf(" : ");
+        if (colonIdx !== -1) {
+          const strong = document.createElement("strong");
+          strong.textContent = info.slice(0, colonIdx);
+          li.append(strong, info.slice(colonIdx));
+        } else {
+          li.textContent = info;
+        }
         return li;
       }),
     );

@@ -390,11 +390,13 @@ body {
 
 @media (max-width: 700px) {
   #map {
-    height: 60vh;
+    height: 50vh;
   }
 
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.4rem;
+    word-break: normal;
+    overflow-wrap: normal;
   }
 
   .filter-buttons {
@@ -402,12 +404,12 @@ body {
   }
 
   .marker:not(.big) {
-    width: 28px;
-    height: 28px;
+    width: 12px;
+    height: 12px;
   }
 
   .group-marker {
-    width: 32px;
-    height: 38px;
+    width: 15px;
+    height: 18px;
   }
 }
