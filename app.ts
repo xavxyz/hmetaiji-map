@@ -196,7 +196,6 @@ const TEMPLATE = `
           <button id="close-btn" class="close-btn">×</button>
 
           <div class="header">
-            <div id="group-region" class="activity-banner group-only"></div>
             <h1 id="title"></h1>
           </div>
 
@@ -215,6 +214,7 @@ const TEMPLATE = `
           <a id="link" href="#" class="btn loc-only">EN SAVOIR PLUS</a>
 
           <div class="section group-only">
+            <div id="group-region" class="activity-banner"></div>
             <p id="group-responsable" class="section-content"></p>
             <a id="group-email" class="btn"></a>
             <a id="group-tel" class="btn btn-secondary"></a>

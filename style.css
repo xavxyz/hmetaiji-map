@@ -327,15 +327,11 @@ body {
     transform: scale(1.12);
 }
 
-/* Fiche groupe : région en bandeau blanc-sur-noir au-dessus du nom (orange). */
-.location-card.group-mode .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-}
-
+/* Fiche groupe : région en bandeau blanc-sur-noir sous le séparateur, comme
+   les bandeaux d'activité de la fiche lieu (le nom du département reste le
+   titre orange dans l'en-tête). */
 #group-region {
-    align-self: flex-start;
+    margin-bottom: 22px;
 }
 
 /* En mode groupes, le logo HME remplace le marker SVG d'en-tête. */
