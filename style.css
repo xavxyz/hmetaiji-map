@@ -299,22 +299,23 @@ body {
 }
 
 .marker-circle {
-  fill: var(--orange);
+  fill: white;
+
   stroke-width: 0;
 }
 
 .marker-symbol {
-  fill: white;
+  fill: var(--orange);
 }
 
 /* état sélectionné */
 
 .marker.active .marker-circle {
-  fill: white;
+  fill: var(--orange);
 }
 
 .marker.active .marker-symbol {
-  fill: var(--orange);
+  fill: white;
 }
 
 /* --------------------------------------------------
