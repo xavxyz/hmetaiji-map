@@ -191,7 +191,7 @@ const TEMPLATE = `
         <div id="card-marker-slot" class="marker">${MARKER_SVG}</div>
 
         <div class="card-content">
-          <button id="close-btn" class="close-btn">×</button>
+          <a href="#" id="close-btn" class="close-btn elementor-button elementor-button-link elementor-size-sm">×</a>
 
           <div class="header">
             <h1 id="title"></h1>
@@ -209,13 +209,13 @@ const TEMPLATE = `
             <ul id="infos"></ul>
           </div>
 
-          <a id="link" href="#" class="btn loc-only">EN SAVOIR PLUS</a>
+          <a id="link" href="#" class="btn elementor-button elementor-button-link elementor-size-sm loc-only">EN SAVOIR PLUS</a>
 
           <div class="section group-only">
             <div id="group-region" class="activity-banner"></div>
             <p id="group-responsable" class="section-content"></p>
-            <a id="group-email" class="btn"></a>
-            <a id="group-tel" class="btn btn-secondary"></a>
+            <a id="group-email" class="btn elementor-button elementor-button-link elementor-size-sm"></a>
+            <a id="group-tel" class="btn btn-secondary elementor-button elementor-button-link elementor-size-sm"></a>
           </div>
         </div>
       </div>

@@ -154,11 +154,13 @@ body {
   right: 0;
   width: 34px;
   height: 34px;
-  border: none;
   background: var(--orange);
   color: white;
   font-size: 20px;
-  cursor: pointer;
+
+  /* hmetaiji.fr adaptation */
+  border-radius: unset !important;
+  padding: 5px !important;
 }
 
 /* --------------------------------------------------
