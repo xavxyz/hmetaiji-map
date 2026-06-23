@@ -493,6 +493,25 @@ export function mount(container: HTMLElement): void {
         "text-halo-width": 1.5,
       },
     });
+
+    map.on("click", "location-labels", (e) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const city = (e.features?.[0] as any)?.properties?.city as string | undefined;
+      if (!city) return;
+      const entry = markerEntries.find((m) => m.location.city === city);
+      if (!entry) return;
+      // Prevent the document-level listener from closing the card immediately
+      e.originalEvent.stopPropagation();
+      setActiveMarker(entry.el);
+      showCard(entry.location);
+    });
+
+    map.on("mouseenter", "location-labels", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "location-labels", () => {
+      map.getCanvas().style.cursor = "";
+    });
   }
 
   function syncLabelFilter(): void {
