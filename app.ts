@@ -269,11 +269,6 @@ export function mount(container: HTMLElement): void {
   showLoader();
 
   map.on("load", async () => {
-    map.addSource("mapbox-terrain", {
-      type: "vector",
-      url: "mapbox://xavxyz.9vcx1li9ymy3",
-    });
-
     map.scrollZoom.disable();
     map.dragPan.disable();
     map.dragRotate.disable();
