@@ -553,7 +553,14 @@ export function mount(container: HTMLElement): void {
     card.querySelector<HTMLElement>("#infos")!.replaceChildren(
       ...location.infos.map((info) => {
         const li = document.createElement("li");
-        li.textContent = info;
+        const colonIdx = info.indexOf(" : ");
+        if (colonIdx !== -1) {
+          const strong = document.createElement("strong");
+          strong.textContent = info.slice(0, colonIdx);
+          li.append(strong, info.slice(colonIdx));
+        } else {
+          li.textContent = info;
+        }
         return li;
       }),
     );
