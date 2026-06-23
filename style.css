@@ -79,6 +79,9 @@ body {
 }
 
 .marker.loading {
+  width: 120px;
+  height: 120px;
+  margin-left: 8%;
   animation: pulse 1.4s ease-in-out infinite;
 }
 

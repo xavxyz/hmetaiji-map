@@ -266,6 +266,8 @@ export function mount(container: HTMLElement): void {
     fitBoundsOptions: { padding: 40 },
   });
 
+  showLoader();
+
   map.on("load", async () => {
     map.addSource("mapbox-terrain", {
       type: "vector",
@@ -281,7 +283,6 @@ export function mount(container: HTMLElement): void {
     map.touchPitch.disable();
     map.boxZoom.disable();
 
-    showLoader();
     try {
       const [locations, groups] = await Promise.all([
         loadLocations(),
