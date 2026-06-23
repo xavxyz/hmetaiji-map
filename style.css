@@ -1,6 +1,5 @@
 :root {
-  --orange: #d9850b;
-  --orange-dark: #c77700;
+  --orange: #ef8600;
 
   --bg: #fff;
   --text: #333;
@@ -268,10 +267,6 @@ body {
   transition: 0.2s;
 }
 
-.btn:hover {
-  background: var(--orange-dark);
-}
-
 /* --------------------------------------------------
    MARKERS MAPBOX
 -------------------------------------------------- */
@@ -410,13 +405,8 @@ body {
 }
 
 .filter-btn.active {
-  background: var(--orange);
-  color: white;
-}
-
-.filter-btn:hover {
-  background: var(--orange-dark);
-  color: white;
+  background: white;
+  color: var(--orange);
 }
 
 /* --------------------------------------------------
