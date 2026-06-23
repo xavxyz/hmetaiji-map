@@ -179,8 +179,7 @@ const TEMPLATE = `
   <div class="app">
     <div class="map-wrap">
       <div id="location-card" class="location-card card-closed">
-        <!-- Le marker reste fixe en haut à gauche et ne participe pas au fondu. -->
-        <div id="card-marker-slot" class="marker">${MARKER_SVG}</div>
+        <div id="card-marker-slot" class="marker big">${MARKER_SVG}</div>
 
         <div class="card-content">
           <a href="#" id="close-btn" class="close-btn elementor-button elementor-button-link elementor-size-sm">×</a>
@@ -261,8 +260,8 @@ export function mount(container: HTMLElement): void {
     container: mapEl,
     style: "mapbox://styles/xavxyz/cmq9jsdv8002a01qp4ml05ho4",
     bounds: [
-      [-5.5, 41.0], // SW — Pays Basque / Pyrénées
-      [9.7, 51.5], // NE — Ardennes / Alsace (Corse incluse)
+      [-4.9, 42.2], // SW — Finistère / Cerbère (Pyrénées)
+      [8.3, 51.1], // NE — Alsace / Dunkerque
     ],
     fitBoundsOptions: { padding: 40 },
   });

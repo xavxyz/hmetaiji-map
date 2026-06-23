@@ -134,6 +134,10 @@ body {
   padding: 5px !important;
 }
 
+.close-btn:hover {
+  border-width: 0 0 1px 1px !important;
+}
+
 /* --------------------------------------------------
    EN-TÊTE
 -------------------------------------------------- */
@@ -157,7 +161,7 @@ body {
   overflow-wrap: break-word;
   word-break: break-word;
   /* Align with logo */
-  line-height: 1.4;
+  line-height: 1.6;
 }
 
 .address {
@@ -251,19 +255,6 @@ body {
   height: 42px;
   cursor: pointer;
   flex-shrink: 0;
-}
-
-.marker.big {
-  width: 84px;
-  height: 84px;
-  margin: 0 auto;
-  cursor: default;
-}
-
-.marker.sm {
-  width: 24px;
-  height: 24px;
-  cursor: default;
 }
 
 .marker svg {
@@ -406,5 +397,15 @@ body {
 
   .filter-buttons {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .marker:not(.big) {
+    width: 28px;
+    height: 28px;
+  }
+
+  .group-marker {
+    width: 32px;
+    height: 38px;
   }
 }
