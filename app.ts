@@ -661,7 +661,7 @@ export function mount(container: HTMLElement): void {
       ...location.activities.map((act) => {
         const banner = document.createElement("div");
         banner.className = "activity-banner";
-        banner.textContent = act;
+        banner.textContent = ACTIVITY_LABEL[act];
         return banner;
       }),
     );
