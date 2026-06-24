@@ -29,20 +29,20 @@ const PICTOS = [picto1, picto2, picto3, picto4, picto5, picto6, picto7];
 
 enum Activity {
   COURS_HEBDO = "COURS HEBDO",
-  CYCLE_JOURNEES = "CYCLE JOURNEES",
-  CYCLE_WEEKENDS = "CYCLE WEEKENDS",
-  STAGE_PETIT_CERCLE = "STAGE PETIT CERCLE",
-  STAGE_RESIDENTIEL = "STAGE RESIDENTIEL",
-  GROUPE_DE_PRATIQUE = "GROUPE DE PRATIQUE",
+  CYCLES_JOURNEES = "CYCLES JOURNEES",
+  CYCLES_WEEKENDS = "CYCLES WEEKENDS",
+  STAGES_PETIT_CERCLE = "STAGES PETIT CERCLE",
+  STAGES_RESIDENTIEL = "STAGES RESIDENTIEL",
+  GROUPES_DE_PRATIQUE = "GROUPES DE PRATIQUE",
 }
 
 const ACTIVITY_LABEL: Record<Activity, string> = {
   [Activity.COURS_HEBDO]: "Cours hebdo",
-  [Activity.CYCLE_JOURNEES]: "Cycle journées",
-  [Activity.CYCLE_WEEKENDS]: "Cycle weekends",
-  [Activity.STAGE_PETIT_CERCLE]: "Stage petit cercle",
-  [Activity.STAGE_RESIDENTIEL]: "Stage résidentiel",
-  [Activity.GROUPE_DE_PRATIQUE]: "Groupe de pratique",
+  [Activity.CYCLES_JOURNEES]: "Cycles journées",
+  [Activity.CYCLES_WEEKENDS]: "Cycles weekends",
+  [Activity.STAGES_PETIT_CERCLE]: "Stages petit cercle",
+  [Activity.STAGES_RESIDENTIEL]: "Stages résidentiels",
+  [Activity.GROUPES_DE_PRATIQUE]: "Groupes de pratique",
 };
 
 const KNOWN_ACTIVITIES = new Set<string>(Object.values(Activity));
@@ -82,7 +82,8 @@ async function loadLocations(): Promise<Location[]> {
 function parseCSV(csv: string): Location[] {
   const [, ...rows] = csv.trim().split("\n");
   return rows
-    .map((row) => {
+    .filter((row) => row.trim() !== "")
+    .flatMap((row) => {
       const [
         city,
         lng,
@@ -95,20 +96,23 @@ function parseCSV(csv: string): Location[] {
         link,
         labelPos,
       ] = parseRow(row);
-      return {
-        city,
-        coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
-        activities: activity
-          .split(",")
-          .map((s) => toActivity(s.trim()))
-          .filter((a): a is Activity => a !== null),
-        description,
-        infos: [infos1, infos2, infos3].filter(Boolean),
-        link,
-        labelPos: labelPos || "top",
-      };
+      if (!lng || !lat) return [];
+      return [
+        {
+          city,
+          coordinates: [parseFloat(lng), parseFloat(lat)] as [number, number],
+          activities: activity
+            .split(",")
+            .map((s) => toActivity(s.trim()))
+            .filter((a): a is Activity => a !== null),
+          description,
+          infos: [infos1, infos2, infos3].filter(Boolean),
+          link,
+          labelPos: labelPos || "top",
+        },
+      ];
     })
-    .filter((loc) => loc.city !== "" && !isNaN(loc.coordinates[0]));
+    .filter((loc) => loc.city !== "");
 }
 
 async function loadGroups(): Promise<TrainingGroup[]> {
@@ -265,7 +269,12 @@ export function mount(container: HTMLElement): void {
     container: mapEl,
     style: "mapbox://styles/xavxyz/cmq9jsdv8002a01qp4ml05ho4",
     ...(isMobile
-      ? { bounds: [[-3.5, 42.0], [8.3, 51.5]] as mapboxgl.LngLatBoundsLike, fitBoundsOptions: { padding: 8 } }
+      ? {
+          bounds: [
+            [-3.4, 42.0],
+            [8.3, 51.5],
+          ] as mapboxgl.LngLatBoundsLike,
+        }
       : { center: [2.5, 46.7] as [number, number], zoom: 5.05 }),
   });
 
@@ -496,7 +505,9 @@ export function mount(container: HTMLElement): void {
 
     map.on("click", "location-labels", (e) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const city = (e.features?.[0] as any)?.properties?.city as string | undefined;
+      const city = (e.features?.[0] as any)?.properties?.city as
+        | string
+        | undefined;
       if (!city) return;
       const entry = markerEntries.find((m) => m.location.city === city);
       if (!entry) return;
@@ -527,7 +538,8 @@ export function mount(container: HTMLElement): void {
       ["get", "activities"],
     ]);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    map.setFilter("location-labels", ["any",
+    map.setFilter("location-labels", [
+      "any",
       ["==", ["get", "activityCount"], 0],
       ...activityConditions,
     ] as any);
