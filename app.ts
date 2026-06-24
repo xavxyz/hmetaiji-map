@@ -383,7 +383,7 @@ export function mount(container: HTMLElement): void {
   // pratique » masque les lieux et affiche les groupes ; sélectionner n'importe
   // quel autre filtre masque les groupes et revient aux lieux.
 
-  const GROUP_FILTER = Activity.GROUPE_DE_PRATIQUE;
+  const GROUP_FILTER = Activity.GROUPES_DE_PRATIQUE;
   const LOCATION_ACTIVITIES = (Object.values(Activity) as Activity[]).filter(
     (a) => a !== GROUP_FILTER,
   );
