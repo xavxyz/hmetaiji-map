@@ -32,7 +32,7 @@ enum Activity {
   CYCLES_JOURNEES = "CYCLES JOURNEES",
   CYCLES_WEEKENDS = "CYCLES WEEKENDS",
   STAGES_PETIT_CERCLE = "STAGES PETIT CERCLE",
-  STAGES_RESIDENTIEL = "STAGES RESIDENTIEL",
+  STAGES_RESIDENTIELS = "STAGES RESIDENTIELS",
   GROUPES_DE_PRATIQUE = "GROUPES DE PRATIQUE",
 }
 
@@ -41,7 +41,7 @@ const ACTIVITY_LABEL: Record<Activity, string> = {
   [Activity.CYCLES_JOURNEES]: "Cycles journées",
   [Activity.CYCLES_WEEKENDS]: "Cycles weekends",
   [Activity.STAGES_PETIT_CERCLE]: "Stages petit cercle",
-  [Activity.STAGES_RESIDENTIEL]: "Stages résidentiels",
+  [Activity.STAGES_RESIDENTIELS]: "Stages résidentiels",
   [Activity.GROUPES_DE_PRATIQUE]: "Groupes de pratique",
 };
 
