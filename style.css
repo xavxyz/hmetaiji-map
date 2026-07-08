@@ -399,8 +399,13 @@ body {
     overflow-wrap: normal;
   }
 
+  .filter-bar {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .filter-buttons {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, 1fr);
   }
 
   .marker:not(.big) {
