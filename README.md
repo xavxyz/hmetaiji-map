@@ -4,7 +4,7 @@ Carte interactive des lieux de pratique, construite en HTML / CSS / Vanilla JS a
 
 ## Prérequis
 
-- Node.js ≥ 18
+- Volta avec node@24.19.0
 - Un token Mapbox ([account.mapbox.com](https://account.mapbox.com))
 - Une Google Sheet partagée en "Tout le monde avec le lien peut voir"
 
