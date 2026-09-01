@@ -244,11 +244,37 @@ function injectStyles(): void {
   stylesInjected = true;
 }
 
+// ─── BADGE DE BUILD ─────────────────────────────────────────────────────────
+// Netlify injecte `CONTEXT` et `BRANCH` dans chaque build ; netlify.toml les
+// réassigne en ligne en `VITE_*` pour qu'elles atteignent le bundle. Le badge
+// n'existe donc que si un contexte a été injecté et qu'il ne vaut pas
+// `production` : son absence en production est structurelle, et un build local
+// sans contexte n'en produit pas non plus.
+
+const DEPLOY_CONTEXT = import.meta.env.VITE_DEPLOY_CONTEXT;
+const DEPLOY_BRANCH = import.meta.env.VITE_BRANCH;
+
+function createBuildBadge(): HTMLElement | null {
+  if (!DEPLOY_CONTEXT || DEPLOY_CONTEXT === "production") return null;
+
+  const badge = document.createElement("div");
+  badge.className = "build-badge";
+  badge.textContent = DEPLOY_BRANCH
+    ? `${DEPLOY_CONTEXT} · ${DEPLOY_BRANCH}`
+    : DEPLOY_CONTEXT;
+  return badge;
+}
+
 // ─── MOUNT ──────────────────────────────────────────────────────────────────────
 
 export function mount(container: HTMLElement): void {
   injectStyles();
   container.innerHTML = TEMPLATE;
+
+  // Le badge se superpose à la carte : il vit dans .map-wrap, seul ancrage
+  // positionné dont le bundle dispose dans une page hôte quelconque.
+  const buildBadge = createBuildBadge();
+  if (buildBadge) container.querySelector(".map-wrap")!.appendChild(buildBadge);
 
   const mapEl = container.querySelector<HTMLElement>("#map")!;
   const card = container.querySelector<HTMLElement>("#location-card")!;
