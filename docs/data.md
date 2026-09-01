@@ -2,7 +2,11 @@
 
 The database is a public Google Spreadsheet fetched as CSV at runtime. No build step, no cache: editing the sheet changes the map on the next page load. It must stay shared as "anyone with the link can view", or the fetch fails and the map loads empty.
 
-Two tabs: **lieux de pratique** (first sheet, no gid) → `Location[]`, and **groupes d'entraînement** (`VITE_GROUPS_GID`) → `TrainingGroup[]`. The gid is optional; without it `loadGroups()` returns `[]` and the groups layer stays empty.
+Two tabs, both addressed the same way — by gid, through `sheetUrl()`: **lieux de pratique** (`VITE_LIEUX_GID`) → `Location[]`, and **groupes d'entraînement** (`VITE_GROUPS_GID`) → `TrainingGroup[]`.
+
+Both gids are optional, but they degrade differently. Without `VITE_LIEUX_GID` the URL carries no gid at all and Google serves the first sheet — the historical behaviour, so production is unaffected by leaving it unset. Without `VITE_GROUPS_GID` no groups URL is built: `loadGroups()` returns `[]` and the groups layer stays empty.
+
+Setting `VITE_LIEUX_GID` is what lets a deploy point at a different lieux tab (a sandbox copy, say) by configuration alone, instead of reordering tabs in the spreadsheet — a silent, unreviewable change.
 
 ## Column order is the contract
 

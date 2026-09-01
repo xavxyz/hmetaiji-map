@@ -15,12 +15,14 @@ import groupIcon from "./assets/groupes-icon.jpg";
 
 const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}/gviz/tq?tqx=out:csv`;
 
-// Onglet « lieux » = première feuille (par défaut) ; onglet « groupes » ciblé par gid.
-const SHEET_URL = SHEET_BASE;
+// Les deux onglets sont ciblés par gid. Sans gid, Google renvoie la première feuille :
+// c'est le défaut historique de l'onglet « lieux », conservé quand VITE_LIEUX_GID est absent.
+const sheetUrl = (gid: string | undefined) =>
+  gid ? `${SHEET_BASE}&gid=${encodeURIComponent(gid)}` : SHEET_BASE;
+
 const GROUPS_GID = import.meta.env.VITE_GROUPS_GID;
-const GROUPS_SHEET_URL = GROUPS_GID
-  ? `${SHEET_BASE}&gid=${encodeURIComponent(GROUPS_GID)}`
-  : null;
+const SHEET_URL = sheetUrl(import.meta.env.VITE_LIEUX_GID);
+const GROUPS_SHEET_URL = GROUPS_GID ? sheetUrl(GROUPS_GID) : null;
 
 // Pictogramme attribué à chaque groupe d'après l'index de sa ligne dans l'onglet.
 const PICTOS = [picto1, picto2, picto3, picto4, picto5, picto6, picto7];
