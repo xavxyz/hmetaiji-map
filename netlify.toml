@@ -1,5 +1,8 @@
 [build]
-  command = "npm run build"
+  # `CONTEXT` et `BRANCH` sont injectées par Netlify mais ne sont pas préfixées
+  # `VITE_` : Vite les ignore. Elles sont donc réassignées en ligne ici pour
+  # atteindre le bundle (badge de build hors production).
+  command = "VITE_DEPLOY_CONTEXT=$CONTEXT VITE_BRANCH=$BRANCH npm run build"
   publish = "dist"
 
 [[headers]]

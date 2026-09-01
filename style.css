@@ -418,3 +418,30 @@ body {
     height: 18px;
   }
 }
+
+/* --------------------------------------------------
+   BADGE DE BUILD (hors production uniquement)
+-------------------------------------------------- */
+
+.build-badge {
+  /* Ancré sur .map-wrap (position: relative) et non sur le viewport : le bundle
+     est injecté dans une page hôte quelconque, où `fixed` ferait dériver le
+     badge sur du contenu qui n'est pas la carte. Même parti que #map-loader. */
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 10;
+
+  padding: 3px 8px;
+  border-radius: 3px;
+
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+
+  /* Purement informatif : ne capte jamais un clic destiné à la carte. */
+  pointer-events: none;
+}
