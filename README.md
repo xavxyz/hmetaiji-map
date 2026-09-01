@@ -64,7 +64,7 @@ donc le bundle comme un CDN, et le site externe (hmetaiji.fr) le référence via
 son propre `<script>`.
 
 Ajouter les variables d'environnement dans Netlify :  
-**Site settings → Environment variables → `VITE_MAPBOX_TOKEN`** et **`VITE_SHEET_ID`**
+**Site settings → Environment variables → `VITE_MAPBOX_TOKEN`**, **`VITE_SHEET_ID`**, **`VITE_LIEUX_GID`** et **`VITE_GROUPS_GID`** (les deux gids peuvent rester vides — voir [docs/build.md](docs/build.md))
 
 ```bash
 # Première mise en ligne

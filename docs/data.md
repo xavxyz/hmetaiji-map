@@ -6,7 +6,7 @@ Two tabs, both addressed the same way — by gid, through `sheetUrl()`: **lieux 
 
 Both gids are optional, but they degrade differently. Without `VITE_LIEUX_GID` the URL carries no gid at all and Google serves the first sheet — the historical behaviour, so production is unaffected by leaving it unset. Without `VITE_GROUPS_GID` no groups URL is built: `loadGroups()` returns `[]` and the groups layer stays empty.
 
-Setting `VITE_LIEUX_GID` is what lets a deploy point at a different lieux tab (a sandbox copy, say) by configuration alone, instead of reordering tabs in the spreadsheet — a silent, unreviewable change.
+Setting `VITE_LIEUX_GID` is what lets a deploy point at a different lieux tab by configuration alone, instead of reordering tabs in the spreadsheet.
 
 ## Column order is the contract
 

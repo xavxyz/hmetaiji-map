@@ -20,8 +20,9 @@ const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${import.meta.env.VIT
 const sheetUrl = (gid: string | undefined) =>
   gid ? `${SHEET_BASE}&gid=${encodeURIComponent(gid)}` : SHEET_BASE;
 
+const LIEUX_GID = import.meta.env.VITE_LIEUX_GID;
 const GROUPS_GID = import.meta.env.VITE_GROUPS_GID;
-const SHEET_URL = sheetUrl(import.meta.env.VITE_LIEUX_GID);
+const SHEET_URL = sheetUrl(LIEUX_GID);
 const GROUPS_SHEET_URL = GROUPS_GID ? sheetUrl(GROUPS_GID) : null;
 
 // Pictogramme attribué à chaque groupe d'après l'index de sa ligne dans l'onglet.
