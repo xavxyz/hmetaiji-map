@@ -12,6 +12,6 @@ The only required check on a pull request is `npm run typecheck` (`tsc --noEmit`
 
 Making it _block_ a merge is a repo setting, not code: `typecheck` must be marked a required status check in branch protection (Settings → Branches, or `gh api -X PUT repos/xavxyz/hmetaiji-map/branches/master/protection`). Without that the check runs and goes red, but merge stays available.
 
-Prettier runs as a **git hook** (`.husky/pre-commit` → `lint-staged`), never as a required check: a pull request failing on whitespace teaches its author to ignore red checks. The hook installs itself through the `prepare` script on the first `npm install`; `npm run format` reformats the whole repo by hand. The repo is not Prettier-clean at rest yet, so the first commit touching `app.ts` or `docs/layers.md` will carry a reformat.
+Prettier runs as a **git hook** (`.husky/pre-commit` → `lint-staged`), never as a required check: a pull request failing on whitespace teaches its author to ignore red checks. The hook installs itself through the `prepare` script on the first `npm install` (lint-staged 17 needs Node >= 22.22, which the Volta pin already guarantees); `npm run format` reformats the whole repo by hand. The repo is not Prettier-clean at rest yet, so the first commit touching `app.ts` or `docs/layers.md` will carry a reformat.
 
 End-to-end tests (Playwright) stay out of scope until a stable staging URL exists.
