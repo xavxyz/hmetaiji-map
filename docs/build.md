@@ -8,8 +8,10 @@ Vite **bakes env vars into the bundle at build time**. Two consequences: the Map
 
 ## CI et formatage
 
-La seule vérification requise sur une pull request est `npm run typecheck` (`tsc --noEmit`), défini dans `.github/workflows/ci.yml`. Même commande en local et en CI, pour qu'un échec soit reproductible sans passer par GitHub. Le gate existe parce que les deux régressions de #28 et #30 étaient des références périmées à un membre d'enum renommé — des erreurs de type que rien ici n'attrapait.
+The only required check on a pull request is `npm run typecheck` (`tsc --noEmit`), defined in `.github/workflows/ci.yml`. Same command locally and in CI, so a failure is reproducible without going through GitHub. The gate exists because the two regressions in #28 and #30 were stale references to a renamed enum member — type errors that nothing here caught. Note its one blind spot: `tsconfig.json`'s `include` covers `embed.ts`, `app.ts` and `vite-env.d.ts` only, so **`vite.config.ts` is not typechecked**.
 
-Prettier tourne en **hook git** (`.husky/pre-commit` → `lint-staged`), pas en check requis, et n'est jamais bloquant pour un merge : une PR rouge sur une histoire d'espaces apprend à son auteur à ignorer les checks rouges. Le hook s'installe tout seul via le script `prepare` au premier `npm install` ; `npm run format` reformate tout le dépôt à la main si besoin.
+Making it _block_ a merge is a repo setting, not code: `typecheck` must be marked a required status check in branch protection (Settings → Branches, or `gh api -X PUT repos/xavxyz/hmetaiji-map/branches/master/protection`). Without that the check runs and goes red, but merge stays available.
 
-Les tests end-to-end (Playwright) sont hors périmètre tant qu'il n'existe pas d'URL de staging stable.
+Prettier runs as a **git hook** (`.husky/pre-commit` → `lint-staged`), never as a required check: a pull request failing on whitespace teaches its author to ignore red checks. The hook installs itself through the `prepare` script on the first `npm install`; `npm run format` reformats the whole repo by hand. The repo is not Prettier-clean at rest yet, so the first commit touching `app.ts` or `docs/layers.md` will carry a reformat.
+
+End-to-end tests (Playwright) stay out of scope until a stable staging URL exists.
