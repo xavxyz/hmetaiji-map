@@ -2,15 +2,6 @@ import mapboxgl from "mapbox-gl";
 import mapboxCss from "mapbox-gl/dist/mapbox-gl.css?inline";
 import appCss from "./style.css?inline";
 
-import picto1 from "./assets/pictos/picto-1.png";
-import picto2 from "./assets/pictos/picto-2.png";
-import picto3 from "./assets/pictos/picto-3.png";
-import picto4 from "./assets/pictos/picto-4.png";
-import picto5 from "./assets/pictos/picto-5.png";
-import picto6 from "./assets/pictos/picto-6.png";
-import picto7 from "./assets/pictos/picto-7.png";
-import groupIcon from "./assets/groupes-icon.jpg";
-
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
 const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}/gviz/tq?tqx=out:csv`;
@@ -21,9 +12,6 @@ const GROUPS_GID = import.meta.env.VITE_GROUPS_GID;
 const GROUPS_SHEET_URL = GROUPS_GID
   ? `${SHEET_BASE}&gid=${encodeURIComponent(GROUPS_GID)}`
   : null;
-
-// Pictogramme attribué à chaque groupe d'après l'index de sa ligne dans l'onglet.
-const PICTOS = [picto1, picto2, picto3, picto4, picto5, picto6, picto7];
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -186,12 +174,11 @@ const TEMPLATE = `
   <div class="app">
     <div class="map-wrap">
       <div id="location-card" class="location-card card-closed">
-        <div id="card-marker-slot" class="marker big">${MARKER_SVG}</div>
-
         <div class="card-content">
           <a href="#" id="close-btn" class="close-btn elementor-button elementor-button-link elementor-size-sm">×</a>
 
           <div class="header">
+            <div id="card-marker-slot" class="marker big">${MARKER_SVG}</div>
             <h1 id="title"></h1>
           </div>
 
@@ -255,9 +242,6 @@ export function mount(container: HTMLElement): void {
   const cardContent = container.querySelector<HTMLElement>(".card-content")!;
   const markerTemplate =
     container.querySelector<HTMLElement>("#card-marker-slot")!;
-
-  // Logo affiché à la place du marker d'en-tête en mode groupes.
-  card.style.setProperty("--group-icon", `url(${groupIcon})`);
 
   // ─── MAP ──────────────────────────────────────────────────────────────────
 
@@ -343,14 +327,9 @@ export function mount(container: HTMLElement): void {
 
   // ─── GROUP MARKERS ────────────────────────────────────────────────────────
 
-  function pictoFor(index: number): string {
-    return PICTOS[index % PICTOS.length];
-  }
-
-  function createGroupMarkerEl(index: number): HTMLElement {
-    const el = document.createElement("div");
-    el.className = "group-marker";
-    el.style.setProperty("--picto", `url(${pictoFor(index)})`);
+  function createGroupMarkerEl(): HTMLElement {
+    const el = cloneMarker();
+    el.classList.add("group-marker");
     return el;
   }
 
@@ -366,7 +345,7 @@ export function mount(container: HTMLElement): void {
 
   function addGroupMarkers(groups: TrainingGroup[]): void {
     groupEntries = groups.map((group, index) => {
-      const el = createGroupMarkerEl(index);
+      const el = createGroupMarkerEl();
       const marker = new mapboxgl.Marker(el).setLngLat(group.coordinates);
       el.addEventListener("click", () => {
         setActiveMarker(el);

@@ -106,10 +106,7 @@ body {
 }
 
 #card-marker-slot {
-  position: absolute;
-  top: 28px;
-  left: 36px;
-  z-index: 2;
+  flex-shrink: 0;
 }
 
 .card-content {
@@ -145,12 +142,11 @@ body {
    EN-TÊTE
 -------------------------------------------------- */
 
-/* Le titre laisse la place au marker fixe (haut-gauche). */
 .header {
   display: flex;
   align-items: center;
+  gap: 14px;
   min-height: 42px;
-  padding-left: 58px;
   padding-right: 40px;
 }
 
@@ -286,25 +282,29 @@ body {
 }
 
 /* --------------------------------------------------
-   MARKERS GROUPES (pictogrammes)
+   MARKERS GROUPES
 -------------------------------------------------- */
 
-.group-marker {
-  width: 46px;
-  height: 56px;
-  cursor: pointer;
-  background-color: var(--text);
-  -webkit-mask: var(--picto) center / contain no-repeat;
-  mask: var(--picto) center / contain no-repeat;
-  transition:
-    background-color 0.15s,
-    transform 0.15s;
+.group-marker .marker-circle {
+  fill: var(--text);
 }
 
-.group-marker:hover,
-.group-marker.active {
-  background-color: var(--orange);
-  transform: scale(1.12);
+.group-marker .marker-symbol {
+  fill: white;
+}
+
+.group-marker:hover .marker-circle,
+.group-marker.active .marker-circle {
+  fill: var(--orange);
+}
+
+/* Card header en mode groupe : même coloration noire. */
+.location-card.group-mode #card-marker-slot .marker-circle {
+  fill: var(--text);
+}
+
+.location-card.group-mode #card-marker-slot .marker-symbol {
+  fill: white;
 }
 
 /* Fiche groupe : région en bandeau blanc-sur-noir sous le séparateur, comme
@@ -312,15 +312,6 @@ body {
    titre orange dans l'en-tête). */
 #group-region {
   margin-bottom: 22px;
-}
-
-/* En mode groupes, le logo HME remplace le marker SVG d'en-tête. */
-.location-card.group-mode #card-marker-slot {
-  background: var(--group-icon) center / contain no-repeat;
-}
-
-.location-card.group-mode #card-marker-slot svg {
-  display: none;
 }
 
 /* Lien secondaire (téléphone) sous le bouton e-mail de la fiche groupe. */
